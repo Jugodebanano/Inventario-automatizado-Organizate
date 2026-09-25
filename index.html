@@ -1,0 +1,1798 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Inventario de equipos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#FFFFFF; --surface:#FFFFFF; --sunk:#F1F5F4;
+  --ink:#0A0F0E; --soft:#4E5A58; --faint:#8B9997;
+  --rule:#DCE4E2; --rule-soft:#EDF2F1;
+  --accent:#0FAE9C; --accent-ink:#FFFFFF; --accent-soft:#DBF5F1;
+  /* cuatro pasos de la misma aguamarina, uno por empresa */
+  --c1:#07534C; --c2:#0C8B7E; --c3:#16C0AE; --c4:#7FE0D4;
+  --c1-soft:#DDEDEB; --c2-soft:#DBF2EE; --c3-soft:#DDF7F3; --c4-soft:#E9FBF8;
+  /* el estado del registro se dice con contraste, no con otro tono */
+  --warn:#6C7A78; --warn-soft:#EDF1F0;
+  --alert:#0A0F0E; --alert-soft:#E2E7E6;
+  --ok:#0FAE9C; --ok-soft:#DBF5F1;
+  --onhead:#FFFFFF; --head:#0A0F0E;
+  --shadow:0 1px 2px rgba(10,15,14,.07);
+  --lift:0 8px 24px rgba(10,15,14,.13);
+  --r:5px;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#070D0C; --surface:#0E1716; --sunk:#050A09;
+    --ink:#E9F4F2; --soft:#93A5A2; --faint:#61726F;
+    --rule:#1D2A28; --rule-soft:#152120;
+    --accent:#2FDDC7; --accent-ink:#04211D; --accent-soft:#0E2E2A;
+    --c1:#177268; --c2:#22A594; --c3:#3FD6C1; --c4:#93F0E2;
+    --c1-soft:#0C211F; --c2-soft:#0D2724; --c3-soft:#0E2E2A; --c4-soft:#123430;
+    --warn:#8CA09D; --warn-soft:#161F1E;
+    --alert:#FFFFFF; --alert-soft:#1E2A28;
+    --ok:#2FDDC7; --ok-soft:#0E2E2A;
+    --onhead:#E9F4F2; --head:#050A09;
+    --shadow:0 1px 2px rgba(0,0,0,.5);
+    --lift:0 8px 26px rgba(0,0,0,.55);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#070D0C; --surface:#0E1716; --sunk:#050A09;
+  --ink:#E9F4F2; --soft:#93A5A2; --faint:#61726F;
+  --rule:#1D2A28; --rule-soft:#152120;
+  --accent:#2FDDC7; --accent-ink:#04211D; --accent-soft:#0E2E2A;
+  --c1:#177268; --c2:#22A594; --c3:#3FD6C1; --c4:#93F0E2;
+  --c1-soft:#0C211F; --c2-soft:#0D2724; --c3-soft:#0E2E2A; --c4-soft:#123430;
+  --warn:#8CA09D; --warn-soft:#161F1E;
+  --alert:#FFFFFF; --alert-soft:#1E2A28;
+  --ok:#2FDDC7; --ok-soft:#0E2E2A;
+  --onhead:#E9F4F2; --head:#050A09;
+  --shadow:0 1px 2px rgba(0,0,0,.5);
+  --lift:0 8px 26px rgba(0,0,0,.55);
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 4.5rem)}
+body{margin:0; background:var(--bg); color:var(--ink);
+  font-family:Archivo,"Helvetica Neue",Arial,sans-serif;
+  font-size:15px; line-height:1.45; -webkit-font-smoothing:antialiased}
+.mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  font-variant-ligatures:none; letter-spacing:-.015em}
+.wrap{max-width:1180px; margin:0 auto; padding:0 20px}
+
+/* un paso de aguamarina por empresa */
+[data-emp="Procytec"]     {--c:var(--c1); --c-soft:var(--c1-soft)}
+[data-emp="Servimercadeo"]{--c:var(--c2); --c-soft:var(--c2-soft)}
+[data-emp="Moviaval"]     {--c:var(--c3); --c-soft:var(--c3-soft)}
+[data-emp="Movistar"]     {--c:var(--c4); --c-soft:var(--c4-soft)}
+[data-emp="Todas"]        {--c:var(--accent); --c-soft:var(--accent-soft)}
+
+/* ---------- cabecera en negro ---------- */
+header{background:var(--head); color:var(--onhead); border-bottom:3px solid var(--accent);
+  --warn:rgba(233,244,242,.5); --alert:#FFFFFF}
+header .sub,header .legend,header .mixleg{color:rgba(233,244,242,.62)}
+header .mixleg b{color:var(--onhead)}
+.top{display:flex; align-items:center; gap:16px; flex-wrap:wrap; padding:24px 0 6px}
+h1{font-size:1.35rem; font-weight:700; margin:0; letter-spacing:-.025em; color:var(--onhead)}
+.sub{font-size:.81rem; margin:3px 0 0}
+.spacer{flex:1 1 auto}
+.ghostbtn{border:1px solid rgba(233,244,242,.22); background:transparent;
+  color:rgba(233,244,242,.78); font:inherit; font-size:.77rem; padding:6px 14px;
+  border-radius:999px; cursor:pointer;
+  transition:color .15s, border-color .15s, background .15s}
+.ghostbtn:hover{color:var(--head); background:var(--accent); border-color:var(--accent)}
+
+/* ---------- cifras ---------- */
+.stats{display:flex; gap:9px; flex-wrap:wrap; padding:18px 0 15px}
+.stat{flex:1 1 130px; background:rgba(255,255,255,.05); border:1px solid rgba(233,244,242,.14);
+  border-radius:var(--r); padding:13px 15px; position:relative; overflow:hidden}
+.stat::after{content:''; position:absolute; left:0; top:0; bottom:0; width:3px;
+  background:var(--c,var(--accent))}
+.stat b{display:block; font-size:1.8rem; font-weight:700; line-height:1.05;
+  letter-spacing:-.035em; font-variant-numeric:tabular-nums; color:var(--onhead)}
+.stat span{display:block; font-size:.73rem; color:rgba(233,244,242,.6); margin-top:3px}
+.stat.s-ok{--c:var(--accent)} .stat.s-ok b{color:var(--accent)}
+.stat.s-warn{--c:rgba(233,244,242,.5)} .stat.s-warn b{color:rgba(233,244,242,.75)}
+.stat.s-alert{--c:#FFFFFF} .stat.s-alert b{color:#FFFFFF}
+
+/* ---------- composición ---------- */
+.mix{display:flex; height:8px; border-radius:999px; overflow:hidden; gap:2px; margin:0 0 9px}
+.mix i{background:var(--c,var(--accent)); display:block; transition:flex-grow .5s ease}
+.mixleg{display:flex; gap:16px; flex-wrap:wrap; font-size:.76rem; margin-bottom:16px}
+.mixleg span{display:inline-flex; align-items:center; gap:6px}
+.mixleg b{font-weight:600}
+.dot{width:9px; height:9px; border-radius:2px; display:inline-block; background:var(--c,var(--accent))}
+
+/* ---------- flota ---------- */
+.fleet{padding:0 0 22px}
+.fleet-grid{display:flex; flex-wrap:wrap; gap:3px; margin:0 0 11px}
+.cell{width:15px; height:24px; border:0; padding:0; cursor:pointer; position:relative;
+  border-radius:2px; background:var(--c,var(--accent)); opacity:.9;
+  transition:opacity .14s, transform .14s;
+  animation:pop .32s cubic-bezier(.2,.9,.3,1.3) backwards}
+@keyframes pop{from{opacity:0; transform:scale(.4)}}
+.cell::after{content:''; position:absolute; left:2px; right:2px; bottom:2px; height:3px;
+  border-radius:1px; background:var(--h); opacity:0}
+.cell[data-h="warn"]{--h:var(--warn)}
+.cell[data-h="alert"]{--h:var(--alert); box-shadow:0 0 0 1.5px #FFFFFF}
+.cell[data-h="warn"]::after,.cell[data-h="alert"]::after{opacity:1}
+.cell:hover,.cell:focus-visible{opacity:1; transform:translateY(-3px) scale(1.07)}
+.cell:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+.legend{display:flex; gap:17px; flex-wrap:wrap; font-size:.76rem}
+.legend i.bar{width:11px; height:3px; border-radius:1px; display:inline-block}
+.legend span{display:inline-flex; align-items:center; gap:6px}
+
+/* ---------- navegación ---------- */
+nav{position:sticky; top:env(safe-area-inset-top,0px); z-index:20;
+  background:var(--surface); border-bottom:1px solid var(--rule); box-shadow:var(--shadow)}
+.tabs{display:flex; gap:0; overflow-x:auto; scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{border:0; background:transparent; color:var(--soft); font:inherit;
+  font-size:.85rem; font-weight:600; padding:14px 16px; cursor:pointer;
+  white-space:nowrap; border-bottom:3px solid transparent;
+  letter-spacing:-.01em; transition:color .15s}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{color:var(--ink); border-bottom-color:var(--accent)}
+.tab .n{color:var(--faint); font-weight:400; margin-left:5px; font-size:.78rem}
+.tab[aria-selected="true"] .n{color:var(--accent)}
+
+/* ---------- controles ---------- */
+.controls{display:flex; gap:10px; flex-wrap:wrap; align-items:center; padding:20px 0 13px}
+.search{flex:1 1 230px; min-width:0; border:1px solid var(--rule); background:var(--surface);
+  color:var(--ink); font:inherit; font-size:.9rem; padding:9px 13px; border-radius:var(--r);
+  transition:border-color .15s, box-shadow .15s}
+.search::placeholder{color:var(--faint)}
+.search:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft)}
+select{border:1px solid var(--rule); background:var(--surface); color:var(--ink);
+  font:inherit; font-size:.85rem; padding:8px 11px; border-radius:var(--r); cursor:pointer}
+select:focus-visible{outline:2px solid var(--accent); outline-offset:-1px}
+.chips{display:flex; gap:7px; flex-wrap:wrap; padding-bottom:15px}
+.chip{border:1px solid var(--rule); background:var(--surface); color:var(--soft);
+  font:inherit; font-size:.81rem; font-weight:600; padding:6px 14px; border-radius:999px;
+  cursor:pointer; transition:transform .15s, box-shadow .15s, color .15s, border-color .15s}
+.chip:hover{color:var(--c,var(--ink)); border-color:var(--c,var(--ink)); transform:translateY(-1px)}
+.chip[aria-pressed="true"]{background:var(--c,var(--accent)); border-color:var(--c,var(--accent));
+  color:#fff; box-shadow:var(--lift)}
+.chip[aria-pressed="true"][data-emp="Movistar"]{color:var(--head)}
+.chip .n{opacity:.72; margin-left:5px; font-size:.77rem}
+.chip.add{border-style:dashed; color:var(--accent); border-color:var(--accent); background:transparent}
+.chip.add:hover{background:var(--accent-soft); transform:translateY(-1px)}
+
+/* ---------- tabla ---------- */
+.scroller{overflow-x:auto; border:1px solid var(--rule); border-radius:var(--r);
+  background:var(--surface); box-shadow:var(--shadow)}
+table{border-collapse:collapse; width:100%; font-size:.86rem}
+th{text-align:left; font-weight:700; font-size:.71rem; color:var(--soft);
+  text-transform:uppercase; letter-spacing:.06em;
+  padding:12px; border-bottom:2px solid var(--ink); background:var(--surface);
+  white-space:nowrap; position:sticky; top:0; z-index:1}
+th.sortable{cursor:pointer; user-select:none; transition:color .15s}
+th.sortable:hover{color:var(--accent)}
+th .arrow{color:var(--accent); font-size:.7rem; margin-left:3px}
+td{padding:9px 12px; border-bottom:1px solid var(--rule-soft); vertical-align:top}
+tbody tr{animation:fade .3s ease backwards}
+@keyframes fade{from{opacity:0; transform:translateY(4px)}}
+tbody tr:hover{background:var(--c-soft,var(--sunk))}
+tbody tr td:first-child{box-shadow:inset 3px 0 0 var(--c,transparent)}
+tbody tr.flag-warn td:first-child{box-shadow:inset 3px 0 0 var(--c,transparent),inset 6px 0 0 var(--warn)}
+tbody tr.flag-alert td:first-child{box-shadow:inset 3px 0 0 var(--c,transparent),inset 6px 0 0 var(--alert)}
+tbody tr:last-child td{border-bottom:0}
+tbody tr.on{background:var(--c-soft,var(--accent-soft))}
+.num{text-align:right; font-family:"IBM Plex Mono",monospace; font-size:.82rem; white-space:nowrap}
+.miss{color:var(--faint)}
+.na{color:var(--faint); font-size:.78rem; font-style:italic}
+.pill{display:inline-block; font-size:.71rem; font-weight:600; padding:2px 9px;
+  border-radius:999px; background:var(--sunk); color:var(--soft); white-space:nowrap;
+  letter-spacing:.02em}
+.pill.ok{background:var(--ok-soft); color:var(--c1)}
+.pill.warn{background:var(--warn-soft); color:var(--warn)}
+.pill.alert{background:var(--ink); color:var(--bg)}
+.tagnew{font-size:.66rem; font-weight:700; padding:1px 7px; border-radius:999px;
+  background:var(--accent); color:var(--accent-ink); vertical-align:1px; letter-spacing:.03em}
+.del{border:0; background:transparent; color:var(--faint); font-size:1rem; line-height:1;
+  padding:2px 7px; cursor:pointer; border-radius:4px; transition:color .15s, background .15s}
+.del:hover{color:var(--bg); background:var(--ink)}
+.who{max-width:230px}
+.empty{padding:48px 20px; text-align:center; color:var(--soft)}
+.empty b{display:block; color:var(--ink); font-weight:700; margin-bottom:5px}
+
+/* ---------- revisar ---------- */
+.issue{border:1px solid var(--rule); border-left:3px solid var(--warn); background:var(--surface);
+  border-radius:var(--r); padding:13px 16px; margin-bottom:9px; box-shadow:var(--shadow);
+  animation:fade .3s ease backwards}
+.issue.sev-alert{border-left-color:var(--alert)}
+.issue h3{margin:0 0 3px; font-size:.91rem; font-weight:700}
+.issue p{margin:0; color:var(--soft); font-size:.85rem}
+.issue .meta{margin-top:7px; font-size:.78rem; color:var(--faint)}
+.group-head{font-size:.8rem; font-weight:700; color:var(--ink);
+  text-transform:uppercase; letter-spacing:.06em;
+  margin:26px 0 11px; padding-bottom:7px; border-bottom:3px solid var(--c,var(--rule))}
+.group-head:first-of-type{margin-top:0}
+
+/* ---------- formulario ---------- */
+.overlay{position:fixed; inset:0; z-index:60; background:rgba(10,15,14,.62);
+  backdrop-filter:blur(3px); display:flex; align-items:flex-start; justify-content:center;
+  padding:calc(env(safe-area-inset-top,0px) + 24px) 16px 24px; overflow-y:auto;
+  animation:fade .2s ease}
+.modal{background:var(--surface); border:1px solid var(--rule); border-top:4px solid var(--accent);
+  border-radius:var(--r); padding:24px; width:100%; max-width:660px;
+  box-shadow:0 20px 56px rgba(0,0,0,.35);
+  animation:rise .26s cubic-bezier(.2,.9,.3,1.1) backwards}
+@keyframes rise{from{opacity:0; transform:translateY(14px) scale(.98)}}
+.modal h2{margin:0 0 4px; font-size:1.1rem; font-weight:700; letter-spacing:-.02em}
+.modal .hint{margin:0 0 18px; color:var(--soft); font-size:.83rem; max-width:52ch}
+.grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px}
+.fld{display:flex; flex-direction:column; gap:4px}
+.fld span{font-size:.72rem; color:var(--soft); font-weight:600;
+  text-transform:uppercase; letter-spacing:.05em}
+.fld input,.fld select{border:1px solid var(--rule); background:var(--bg); color:var(--ink);
+  font:inherit; font-size:.88rem; padding:8px 10px; border-radius:var(--r); width:100%}
+.fld input:focus,.fld select:focus{outline:none; border-color:var(--accent);
+  box-shadow:0 0 0 3px var(--accent-soft)}
+.err{margin:14px 0 0; color:var(--ink); font-size:.84rem; font-weight:600;
+  border-left:3px solid var(--accent); padding-left:10px}
+.acts{display:flex; gap:9px; justify-content:flex-end; margin-top:20px}
+.btn{border:1px solid var(--accent); background:var(--accent); color:var(--accent-ink);
+  font:inherit; font-size:.86rem; font-weight:700; padding:9px 22px; border-radius:var(--r);
+  cursor:pointer; letter-spacing:.01em; transition:transform .15s, box-shadow .15s}
+.btn:hover{transform:translateY(-1px); box-shadow:var(--lift)}
+.btn:disabled{opacity:.5; cursor:default; transform:none; box-shadow:none}
+.btn.ghost{background:transparent; border-color:var(--rule); color:var(--soft)}
+.btn.ghost:hover{color:var(--ink); border-color:var(--ink); box-shadow:none}
+
+footer{border-top:1px solid var(--rule); margin-top:42px; padding:22px 0 34px;
+  color:var(--faint); font-size:.79rem}
+footer p{margin:0 0 5px; max-width:70ch}
+
+@media (max-width:640px){
+  .wrap{padding:0 14px}
+  .cell{width:11px; height:18px}
+  .who{max-width:150px}
+  h1{font-size:1.15rem}
+  .stat b{font-size:1.45rem}
+  th{font-size:.68rem}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none !important; animation:none !important}
+}
+
+/* ---------- textura de la cabecera ---------- */
+header{position:relative; overflow:hidden}
+header::before{
+  content:''; position:absolute; inset:0; pointer-events:none; opacity:.5;
+  background-image:radial-gradient(rgba(15,174,156,.34) 1px, transparent 1px);
+  background-size:22px 22px;
+  -webkit-mask-image:linear-gradient(to bottom, #000 0%, transparent 82%);
+  mask-image:linear-gradient(to bottom, #000 0%, transparent 82%);
+}
+header > .wrap{position:relative; z-index:1}
+.top{padding:30px 0 8px}
+h1{font-size:1.65rem; letter-spacing:-.035em}
+.eyebrow{font-size:.68rem; font-weight:700; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--accent); margin:0 0 5px}
+.stat{background:rgba(255,255,255,.055); backdrop-filter:blur(6px);
+  border-radius:10px; padding:15px 17px}
+.stat b{font-size:2rem}
+.fleet{padding:0 0 26px}
+
+/* ---------- cuerpo elevado ---------- */
+main{padding-bottom:10px}
+.scroller{border-radius:12px}
+.modal{border-radius:12px}
+tbody tr{cursor:pointer}
+
+/* ---------- ficha lateral ---------- */
+.sheet{
+  position:fixed; z-index:70; top:0; right:0; bottom:0; width:min(430px,100%);
+  background:var(--surface); border-left:1px solid var(--rule);
+  box-shadow:-16px 0 48px rgba(10,15,14,.22);
+  display:flex; flex-direction:column; overflow-y:auto;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  animation:slide .3s cubic-bezier(.2,.9,.3,1) backwards;
+}
+@keyframes slide{from{transform:translateX(24px); opacity:0}}
+.sheet-scrim{position:fixed; inset:0; z-index:69; background:rgba(10,15,14,.42);
+  animation:fade .2s ease backwards}
+.sheet-top{background:var(--head); color:var(--onhead); padding:22px 24px 20px;
+  border-bottom:3px solid var(--c,var(--accent)); position:relative}
+.sheet-top .emp{font-size:.67rem; font-weight:700; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--c,var(--accent))}
+.sheet-top .sn{font-family:"IBM Plex Mono",monospace; font-size:1.3rem; font-weight:500;
+  letter-spacing:-.02em; margin:7px 0 3px; word-break:break-all}
+.sheet-top .md{font-size:.85rem; color:rgba(233,244,242,.66)}
+.sheet-close{position:absolute; top:16px; right:16px; width:30px; height:30px;
+  border:1px solid rgba(233,244,242,.25); background:transparent; color:var(--onhead);
+  border-radius:50%; cursor:pointer; font-size:1rem; line-height:1;
+  transition:background .15s, color .15s}
+.sheet-close:hover{background:var(--accent); color:var(--head); border-color:var(--accent)}
+.sheet-body{padding:20px 24px 28px}
+.sec{font-size:.67rem; font-weight:700; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--faint); margin:22px 0 10px; padding-bottom:6px; border-bottom:1px solid var(--rule)}
+.sec:first-child{margin-top:0}
+.pairs{display:grid; grid-template-columns:1fr 1fr; gap:13px 16px}
+.pair{min-width:0}
+.pair dt{font-size:.68rem; color:var(--faint); font-weight:600;
+  letter-spacing:.05em; text-transform:uppercase; margin-bottom:2px}
+.pair dd{margin:0; font-size:.92rem; word-break:break-word}
+.pair.w{grid-column:1 / -1}
+.diag{border:1px solid var(--rule); border-left:3px solid var(--warn); border-radius:var(--r);
+  padding:11px 13px; margin-bottom:8px; background:var(--sunk)}
+.diag.sev-alert{border-left-color:var(--alert)}
+.diag b{display:block; font-size:.85rem; font-weight:700; margin-bottom:2px}
+.diag span{font-size:.82rem; color:var(--soft)}
+.clean{display:flex; align-items:center; gap:9px; font-size:.87rem; color:var(--accent);
+  font-weight:600; background:var(--accent-soft); padding:11px 13px; border-radius:var(--r)}
+.sheet-acts{margin-top:24px; padding-top:18px; border-top:1px solid var(--rule)}
+
+@media (max-width:640px){
+  .sheet{top:auto; left:0; width:100%; max-height:86vh; border-left:0;
+    border-top:1px solid var(--rule); border-radius:16px 16px 0 0;
+    box-shadow:0 -16px 48px rgba(10,15,14,.3)}
+  @keyframes slide{from{transform:translateY(28px); opacity:0}}
+  .pairs{grid-template-columns:1fr}
+  h1{font-size:1.3rem}
+  .stat b{font-size:1.5rem}
+}
+
+/* ---------- marca ---------- */
+.brand{
+  margin:0 0 7px; line-height:.95; color:var(--onhead);
+  font-size:clamp(2.1rem, 7vw, 3.1rem); font-weight:700; letter-spacing:-.045em;
+}
+.brand i{color:var(--accent); font-style:normal}
+/* con la marca arriba, el titulo pasa a ser el rotulo de la seccion */
+.top h1{
+  font-size:.86rem; font-weight:600; letter-spacing:.13em; text-transform:uppercase;
+  color:rgba(233,244,242,.62);
+}
+.top .sub{margin-top:6px}
+@media (max-width:640px){
+  .top h1{font-size:.74rem; letter-spacing:.11em}
+}
+
+/* ---------- logotipo ---------- */
+.brandbox{display:flex; align-items:center; gap:15px; margin:0 0 9px}
+.iso{width:clamp(46px, 9vw, 62px); height:auto; flex:none}
+.iso .ring-l{stroke:var(--onhead)}
+.iso .mark{stroke:var(--accent)}
+.brand{
+  position:relative; margin:0; line-height:.92; color:var(--onhead);
+  font-family:Quicksand,Archivo,sans-serif;
+  font-size:clamp(1.9rem, 6.4vw, 2.85rem); font-weight:600; letter-spacing:-.005em;
+}
+.brand em{font-style:normal; color:var(--onhead)}
+/* el trazo aguamarina bajo el centro de la palabra, como en el bordado */
+.brand i{
+  position:absolute; left:47%; bottom:-.09em; width:14%; height:.075em;
+  background:var(--accent); border-radius:999px;
+}
+
+/* ---------- bloque de lectura automática ---------- */
+.auto{border:1px solid var(--rule); border-left:3px solid var(--accent);
+  border-radius:var(--r); padding:14px 16px 15px; margin-bottom:20px; background:var(--sunk)}
+.auto-h{display:flex; align-items:center; justify-content:space-between; gap:10px;
+  font-size:.68rem; font-weight:700; letter-spacing:.13em; text-transform:uppercase;
+  color:var(--faint); margin-bottom:10px}
+.auto-h.plain{border-bottom:1px solid var(--rule); padding-bottom:7px; margin-bottom:14px}
+.mini{border:1px solid var(--rule); background:var(--surface); color:var(--soft);
+  font:inherit; font-size:.7rem; font-weight:600; letter-spacing:.04em;
+  padding:3px 10px; border-radius:999px; cursor:pointer; text-transform:none;
+  transition:color .15s, border-color .15s}
+.mini:hover{color:var(--accent); border-color:var(--accent)}
+.cmd{position:relative; background:var(--head); color:#D9F2EE; border-radius:var(--r);
+  padding:11px 13px; margin:0 0 10px; overflow-x:auto;
+  font-family:"IBM Plex Mono",monospace; font-size:.71rem; line-height:1.55}
+.cmd code{white-space:pre-wrap; word-break:break-all; display:block; padding-right:66px}
+.cmd .copy{position:absolute; top:9px; right:9px; background:rgba(255,255,255,.1);
+  border-color:rgba(255,255,255,.2); color:#D9F2EE}
+.cmd .copy:hover{background:var(--accent); color:var(--head); border-color:var(--accent)}
+#pegado{width:100%; border:1px solid var(--rule); background:var(--surface); color:var(--ink);
+  font-family:"IBM Plex Mono",monospace; font-size:.78rem; padding:9px 11px;
+  border-radius:var(--r); resize:vertical}
+#pegado:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft)}
+.auto-a{display:flex; align-items:center; gap:11px; margin-top:10px; flex-wrap:wrap}
+.btn.sm{font-size:.79rem; padding:7px 15px}
+.auto-msg{font-size:.79rem; font-weight:500}
+.auto-msg.bien{color:var(--accent)}
+.auto-msg.malo{color:var(--ink)}
+
+/* ---------- selector de qué registrar ---------- */
+.opts{display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:8px}
+.opt{display:flex; flex-direction:column; gap:1px; cursor:pointer; position:relative;
+  border:1px solid var(--rule); background:var(--surface); border-radius:var(--r);
+  padding:10px 12px; transition:border-color .15s, box-shadow .15s}
+.opt:hover{border-color:var(--accent)}
+.opt input{position:absolute; opacity:0; pointer-events:none}
+.opt b{font-size:.85rem; font-weight:700}
+.opt span{font-size:.72rem; color:var(--faint); font-family:"IBM Plex Mono",monospace}
+.opt:has(input:checked){border-color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent);
+  background:var(--accent-soft)}
+.opt:has(input:focus-visible){outline:2px solid var(--accent); outline-offset:2px}
+.fld.w2{grid-column:1 / -1}
+#d_sn{width:100%; border:1px solid var(--rule); background:var(--surface); color:var(--ink);
+  font-family:"IBM Plex Mono",monospace; font-size:.82rem; padding:9px 11px;
+  border-radius:var(--r); resize:vertical; text-transform:uppercase}
+#d_sn:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft)}
+
+/* ---------- lector de código de barras ---------- */
+.scan{position:fixed; inset:0; z-index:90; background:#000; display:flex;
+  flex-direction:column; animation:fade .2s ease}
+.scan video{flex:1 1 auto; width:100%; height:100%; object-fit:cover; min-height:0}
+.scan .mira{position:absolute; top:50%; left:50%; width:min(74vw,330px); height:130px;
+  transform:translate(-50%,-50%); border:2px solid var(--accent); border-radius:10px;
+  box-shadow:0 0 0 100vmax rgba(0,0,0,.5); pointer-events:none}
+.scan .mira::after{content:''; position:absolute; left:8px; right:8px; top:50%;
+  height:2px; background:var(--accent); opacity:.85; animation:barrido 1.9s ease-in-out infinite}
+@keyframes barrido{0%,100%{transform:translateY(-52px)}50%{transform:translateY(52px)}}
+.scan-pie{position:relative; z-index:2; display:flex; align-items:center; gap:12px;
+  justify-content:space-between; padding:16px 18px;
+  padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));
+  background:#0A0F0E; color:#E9F4F2; font-size:.85rem; font-weight:500}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <div class="brandbox">
+          <svg class="iso" viewBox="0 0 100 100" role="img" aria-label="Organ&iacute;zate">
+            <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <path class="ring-l" d="M 56.7 16.7 A 32 32 0 0 0 38.0 77.7" stroke-width="8.5"/>
+              <g class="mark" stroke-width="8.5">
+                <path d="M 67.0 20.9 A 32 32 0 0 1 67.0 75.1"/>
+              </g>
+              <g class="mark" stroke-width="7.5">
+                <path d="M 36 77 L 36 70"/>
+                <path d="M 45.5 77 L 45.5 58"/>
+                <path d="M 55 45 L 55 76 Q 55 81.5 60.5 81.5 L 83 61"/>
+              </g>
+            </g>
+          </svg>
+          <p class="brand">Organ<em>&iacute;</em>zate<i></i></p>
+        </div>
+        <h1>Inventario de equipos</h1>
+        <p class="sub" id="stamp"></p>
+      </div>
+      <div class="spacer"></div>
+      <button class="ghostbtn" id="present" type="button">Ocultar diagnóstico</button>
+      <button class="ghostbtn" id="theme" type="button">Cambiar tema</button>
+    </div>
+    <div class="stats" id="stats"></div>
+    <div class="mix" id="mix" aria-hidden="true"></div>
+    <div class="mixleg" id="mixleg"></div>
+    <div class="fleet">
+      <div class="fleet-grid" id="fleet" role="list" aria-label="Flota de equipos"></div>
+      <div class="legend" id="legend"></div>
+    </div>
+  </div>
+</header>
+
+<nav>
+  <div class="wrap">
+    <div class="tabs" role="tablist" id="tabs"></div>
+  </div>
+</nav>
+
+<main class="wrap" id="main"></main>
+
+<footer class="wrap">
+  <p id="foot-note"></p>
+  <p>Los datos técnicos —procesador, memoria, disco— deberían reportarlos los equipos por agente, no escribirse a mano. Esta vista es una foto del archivo, no una consulta en vivo.</p>
+</footer>
+
+<script id="payload" type="application/json">{"equipos": [{"empresa": "Procytec", "serial": "TP00116A", "placa": "33218", "tipo": "PORTATIL", "marca": "LENOVO", "modelo": "THINKPAD E14", "proc": "Intel Core i5", "procRaw": null, "cpu": 1.6, "ram": 16, "disco": 239, "area": "COBRANZA", "cargo": "SUPERVISOR", "quien": "ASTRID ANGELICA HURTADO", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "MJ0DJC86", "placa": "33265", "tipo": "PORTATIL", "marca": "LENOVO", "modelo": "THINKPAD E14", "proc": "Intel Core i5", "procRaw": null, "cpu": 1.6, "ram": 16, "disco": 239, "area": "COBRANZA", "cargo": "CONTABILIDAD", "quien": "DABIEL BABILONIA HINESTROZA", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "9ZDMWD3", "placa": "33606", "tipo": "PORTATIL", "marca": "DELL", "modelo": "LATITUDE 5420", "proc": "Intel Core i5", "procRaw": null, "cpu": 2.6, "ram": 16, "disco": 256, "area": "COBRANZA", "cargo": "ANALISTA", "quien": "DUVER ANDRES QUINTERO TREJOS", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "F3T34J3", "placa": "32653", "tipo": "PORTATIL", "marca": "DELL", "modelo": "LATITUDE 5420", "proc": "Intel Core i5", "procRaw": null, "cpu": 2.6, "ram": 16, "disco": 256, "area": "COBRANZA", "cargo": "SUPERVISOR", "quien": "JUAN HERNANDEZ VETANCUR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "GF4Q6M3", "placa": "32678", "tipo": "PORTATIL", "marca": "DELL", "modelo": "LATITUDE 5420", "proc": "Intel Core i5", "procRaw": null, "cpu": 2.6, "ram": 16, "disco": 256, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "LIBRE", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "9KK9693", "placa": "10031353", "tipo": "PORTATIL", "marca": "DELL", "modelo": "PRECISION3550", "proc": "Intel Core i5", "procRaw": null, "cpu": 2.5, "ram": 16, "disco": 256, "area": "COBRANZA", "cargo": "CONTABILIDAD", "quien": "KAREN BONETTO", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "CBW8R73", "placa": "32923", "tipo": "PORTATIL", "marca": "DELL", "modelo": "LATITUDE 5420", "proc": "Intel Core i5", "procRaw": null, "cpu": 2.6, "ram": 16, "disco": 256, "area": "COBRANZA", "cargo": "CALL", "quien": "CASA, YSDELY COROMOTO", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "6CTD063", "placa": "10031529", "tipo": "PORTATIL", "marca": "DELL", "modelo": "LATITUDE 5420", "proc": "Intel Core i5", "procRaw": null, "cpu": 2.6, "ram": 16, "disco": 238, "area": "OPERACIONES", "cargo": "CALL", "quien": "TRABAJADOR - MEDELLIN", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "B1LT3M3", "placa": "32646", "tipo": "PORTATIL", "marca": "DELL", "modelo": "LATITUDE 5420", "proc": "Intel Core i5", "procRaw": null, "cpu": 2.6, "ram": 16, "disco": 512, "area": "OPERACIONES", "cargo": "CALL", "quien": "TRABAJADOR - MEDELLIN", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "HWWZ2J3", "placa": "10031647", "tipo": "PORTATIL", "marca": "DELL", "modelo": "LATITUDE 5420", "proc": "Intel Core i5", "procRaw": null, "cpu": 2.6, "ram": 16, "disco": 512, "area": "OPERACIONES", "cargo": "CALL", "quien": "TRABAJADOR - MEDELLIN", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "5B0FZH3", "placa": "32869", "tipo": "PORTATIL", "marca": "DELL", "modelo": "LATITUDE 5420", "proc": "Intel Core i5", "procRaw": null, "cpu": 2.6, "ram": 16, "disco": 512, "area": "OPERACIONES", "cargo": "CALL", "quien": "TRABAJADOR - MEDELLIN", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "HH9P3F3", "placa": "32838", "tipo": "PORTATIL", "marca": "DELL", "modelo": "LATITUDE 5420", "proc": "Intel Core i5", "procRaw": null, "cpu": 2.6, "ram": 16, "disco": 512, "area": "OPERACIONES", "cargo": "CALL", "quien": "TRABAJADOR - MEDELLIN", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "580G7D3", "placa": "32716", "tipo": "PORTATIL", "marca": "DELL", "modelo": "LATITUDE 5420", "proc": "Intel Core i5", "procRaw": null, "cpu": 2.6, "ram": 16, "disco": 512, "area": "OPERACIONES", "cargo": "CALL", "quien": "TRABAJADOR - MEDELLIN", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "9H7YMH3", "placa": "32842", "tipo": "ALL IN ONE", "marca": "DELL", "modelo": "Optiplex 3280", "proc": "Intel Core i5", "procRaw": null, "cpu": 2.3, "ram": 16, "disco": 256, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR MARIANA CORRALES", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "8L533F3", "placa": "32673", "tipo": "PORTATIL", "marca": "DELL", "modelo": "LATITUDE 5420", "proc": "Intel Core i5", "procRaw": null, "cpu": 2.6, "ram": 16, "disco": 256, "area": "COBRANZA", "cargo": "JURIDICA", "quien": "JULIAN STIVEN PEREZ HERNANDEZ", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "B-JH0BH53", "placa": "33069", "tipo": "PORTATIL", "marca": "DELL", "modelo": "PRECISION 3550", "proc": "Intel Core i7", "procRaw": null, "cpu": 1.8, "ram": 16, "disco": 256, "area": "COBRANZA", "cargo": "SOPORTE", "quien": "SARA DAHIANNA CARDONA GUEVARA", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "7F973J3", "placa": "32656", "tipo": "PORTATIL", "marca": "DELL", "modelo": "LATITUDE 5420", "proc": "Intel Core i5", "procRaw": null, "cpu": 2.4, "ram": 16, "disco": 256, "area": "COBRANZA", "cargo": "JURIDICA", "quien": "STEPHANIE MENDEZ HERNANDEZ", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "8CN12009K4", "placa": "10030799", "tipo": "ALL IN ONE", "marca": "HP", "modelo": "ProOne 400 G6 (200S5LT#AB)", "proc": "Intel Core i5", "procRaw": null, "cpu": 3.1, "ram": 16, "disco": 256, "area": "COBRANZA", "cargo": "CALL", "quien": "KATHERIN CELIS (CASA)", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "MP1VZHT5", "placa": "32841", "tipo": "ALL IN ONE", "marca": "LENOVO", "modelo": "V30A-22", "proc": "Intel Core i5", "procRaw": null, "cpu": 2.3, "ram": 16, "disco": 256, "area": "COBRANZA", "cargo": "CALL", "quien": "PUESTO SARA OSSA", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "MP1VZHX5", "placa": "32945", "tipo": "ALL IN ONE", "marca": "LENOVO", "modelo": "V30A-22", "proc": "Intel Core i5", "procRaw": null, "cpu": 1.6, "ram": 16, "disco": 256, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "738VZB3", "placa": "32947", "tipo": "ALL IN ONE", "marca": "DELL", "modelo": "OptiPlex 7480", "proc": "Intel Core i5", "procRaw": null, "cpu": 3.1, "ram": 16, "disco": 256, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "73640C3", "placa": "32958", "tipo": "ALL IN ONE", "marca": "DELL", "modelo": "OptiPlex 7480", "proc": "Intel Core i5", "procRaw": null, "cpu": 3.1, "ram": 16, "disco": 256, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "8YP1XM3", "placa": "33023", "tipo": "ALL IN ONE", "marca": "DELL", "modelo": "OptiPlex 7490", "proc": "Intel Core i5", "procRaw": null, "cpu": 3.1, "ram": 16, "disco": 256, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "18SG2N3", "placa": "33024", "tipo": "ALL IN ONE", "marca": "DELL", "modelo": "OptiPlex 7490", "proc": "Intel Core i5", "procRaw": null, "cpu": 3.1, "ram": 16, "disco": 256, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "7WTN2Q3", "placa": "33025", "tipo": "ALL IN ONE", "marca": "DELL", "modelo": "OptiPlex 7490", "proc": "Intel Core i5", "procRaw": null, "cpu": 3.2, "ram": 16, "disco": 256, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "BWJWT64", "placa": "33132", "tipo": "ALL IN ONE", "marca": "DELL", "modelo": "Optiplex 7420 (72M82)", "proc": "Intel Core i5", "procRaw": null, "cpu": 1.7, "ram": 16, "disco": 512, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR (KAREN YAJAIRA HERNANDEZ ROLO)", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "JC8ZWP3", "placa": "33144", "tipo": "ALL IN ONE", "marca": "DELL", "modelo": "OptiPlex 7490", "proc": "Intel Core i5", "procRaw": null, "cpu": 3.2, "ram": 16, "disco": 256, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "FGMHK93", "placa": "33146", "tipo": "ALL IN ONE", "marca": "DELL", "modelo": "OPTIPLEX 7480", "proc": "Intel Core i5", "procRaw": null, "cpu": 3.1, "ram": 16, "disco": 256, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "FGKNK93", "placa": "33145", "tipo": "ALL IN ONE", "marca": "DELL", "modelo": "OPTIPLEX 7480", "proc": "Intel Core i5", "procRaw": null, "cpu": 3.1, "ram": 16, "disco": 256, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "1L6VQN3", "placa": "33505", "tipo": "ALL IN ONE", "marca": "DELL", "modelo": "OPTIPLEX 5490", "proc": "Intel Core i5", "procRaw": null, "cpu": 2.3, "ram": 16, "disco": 256, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "PF4685QV", "placa": "33484", "tipo": "PORTATIL", "marca": "LENOVO", "modelo": "20TD003KUS", "proc": "Intel Core i5", "procRaw": null, "cpu": 2.42, "ram": 16, "disco": 256, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "GX3B863", "placa": "33523", "tipo": "PORTATIL", "marca": "DELL", "modelo": "LATITUDE 3510", "proc": "Intel Core i5", "procRaw": null, "cpu": 2.11, "ram": 16, "disco": 238, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR LICE JHOJANA ORREGO AMARILES (CASA )", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "HJ6VQN3", "placa": "33516", "tipo": "ALL IN ONE", "marca": "DELL", "modelo": "OPTIPLEX 5490", "proc": "Intel Core i5", "procRaw": null, "cpu": 2.3, "ram": 16, "disco": 238, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "HK6VQN3", "placa": "33517", "tipo": "ALL IN ONE", "marca": "DELL", "modelo": "OPTIPLEX 5490", "proc": "Intel Core i5", "procRaw": null, "cpu": 2.3, "ram": 16, "disco": 238, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "2L6VQN3", "placa": "33520", "tipo": "ALL IN ONE", "marca": "DELL", "modelo": "OPTIPLEX 5490", "proc": "Intel Core i5", "procRaw": null, "cpu": 2.3, "ram": 16, "disco": 238, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "PF2J268A", "placa": "33384", "tipo": "PORTATIL", "marca": "LENOVO", "modelo": "THINKPAD E14", "proc": "Intel Core i5", "procRaw": null, "cpu": 2.1, "ram": 16, "disco": 239, "area": "COBRANZA", "cargo": "CALL", "quien": "LUISA FERNANDA DURANGO HERNANDEZ", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "5K6VQN3", "placa": "33519", "tipo": "ALL IN ONE", "marca": "DELL", "modelo": "OPTIPLEX 5490", "proc": "Intel Core i5", "procRaw": null, "cpu": 2.3, "ram": 16, "disco": 233, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "4J6VQN3", "placa": "33518", "tipo": "ALL IN ONE", "marca": "DELL", "modelo": "OPTIPLEX 5490", "proc": "Intel Core i5", "procRaw": null, "cpu": 2.3, "ram": 16, "disco": 238, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR Miguel ceron (CASA)", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "9S5D663", "placa": "33522", "tipo": "PORTATIL", "marca": "DELL", "modelo": "LATITUDE 3510", "proc": "Intel Core i5", "procRaw": null, "cpu": 2.11, "ram": 16, "disco": 238, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR ( ESTEFANIA BARRIENTOS LOPEZ )", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "5H9X693", "placa": "33690", "tipo": "PORTATIL", "marca": "DELL", "modelo": "LATITUDE 5410", "proc": "Intel Core i5", "procRaw": null, "cpu": 2.21, "ram": 16, "disco": 238, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR ( VALENTINA PINEDA )", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "9CN20907VX", "placa": "33538", "tipo": "ALL IN ONE", "marca": "HP", "modelo": "ProOne 400 G6 24 All-in-One", "proc": "Intel Core i5", "procRaw": null, "cpu": 3.1, "ram": 16, "disco": 238, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "8CN212081K", "placa": "33537", "tipo": "ALL IN ONE", "marca": "HP", "modelo": "ProOne 400 G6 24 All-in-One", "proc": "Intel Core i5", "procRaw": null, "cpu": 3.1, "ram": 16, "disco": 238, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "8CN20907W6", "placa": "33539", "tipo": "ALL IN ONE", "marca": "HP", "modelo": "ProOne 400 G6 24 All-in-One", "proc": "Intel Core i5", "procRaw": null, "cpu": 3.1, "ram": 16, "disco": 238, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "4CF3573", "placa": "33706", "tipo": "PORTATIL", "marca": "DELL", "modelo": "LATITUDE 5410", "proc": "Intel Core i7", "procRaw": null, "cpu": 2.3, "ram": 16, "disco": 128, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "LIBRE", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "BRM48C3", "placa": "33710", "tipo": "PORTATIL", "marca": "DELL", "modelo": "LATITUDE 5420", "proc": "Intel Core i5", "procRaw": null, "cpu": 2.6, "ram": 16, "disco": 238, "area": "COBRANZA", "cargo": "SUPERVISOR", "quien": "SANTIAGO CARBALLO", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "MJ0EEH2F", "placa": "33530", "tipo": "PORTATIL", "marca": "LENOVO", "modelo": "THINKPAD E15", "proc": "Intel Core i5", "procRaw": null, "cpu": 2.4, "ram": 16, "disco": 238, "area": "AUXILIAR", "cargo": "AUXILIAR", "quien": "SANDRA VIVIANNE ARENS MARTINEZ", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "PF464HB9", "placa": "33532", "tipo": "PORTATIL", "marca": "LENOVO", "modelo": "THINKPAD E15", "proc": "Intel Core i5", "procRaw": null, "cpu": 2.4, "ram": 16, "disco": 238, "area": "ANALISTA", "cargo": "ANALISTA", "quien": "HERNEY DAVID GOMEZ DIAZ", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "8BCJND3", "placa": "33564", "tipo": "PORTATIL", "marca": "DELL", "modelo": "LATITUDE 3540", "proc": "Intel Core i5", "procRaw": null, "cpu": 1.3, "ram": 16, "disco": 238, "area": "COBRANZA", "cargo": "COBRANZA", "quien": "ASESOR- LUZ ADRIANA GOMEZ MORALES", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "3680LY3", "placa": "33811", "tipo": "PORTATIL", "marca": "DELL", "modelo": "LATITUDE 3541", "proc": "Intel Core i5", "procRaw": null, "cpu": 1.3, "ram": 16, "disco": 238, "area": "COBRANZA", "cargo": "COBRANZA", "quien": "ASESOR-JUAN RAMIREZ", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "2R7MWD3", "placa": "34100", "tipo": "PORTATIL", "marca": "DELL", "modelo": "LATITUDE 5420", "proc": "Intel Core i5", "procRaw": null, "cpu": 1.5, "ram": 16, "disco": 477, "area": null, "cargo": null, "quien": null, "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "6H06ZW3", "placa": "33810", "tipo": "PORTATIL", "marca": "DELL", "modelo": "LATITUDE3540", "proc": "Intel Core i5", "procRaw": null, "cpu": 1.3, "ram": 16, "disco": 477, "area": "IT SUPPORT", "cargo": "IT SUPPORT", "quien": "NICOLÁS GIRALDO GUTIERREZ", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": null, "placa": "32734", "tipo": "PORTATIL", "marca": "DELL", "modelo": "LATITUDE 5420", "proc": "Intel Core i5", "procRaw": null, "cpu": null, "ram": 16, "disco": null, "area": "OPERACIONES", "cargo": "MEDELLIN", "quien": "CARLOS MARIO", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "DMN2H24", "placa": "33561", "tipo": "PORTATIL", "marca": "DELL", "modelo": "LATITUDE 3540", "proc": "Intel Core i5", "procRaw": null, "cpu": 1.3, "ram": 16, "disco": 477, "area": "SUPERVISOR", "cargo": "SUPERVISOR", "quien": "LEIDY JHOANA ANDICA", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "MP1W42AX", "placa": "33911", "tipo": "ALL IN ONE", "marca": "LENOVO", "modelo": "11FV006ALS", "proc": "Intel Core i5", "procRaw": null, "cpu": 2.1, "ram": 16, "disco": 238, "area": "ASESOR", "cargo": "ASESOR", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "4P4Q6D3", "placa": "34115", "tipo": "PORTATIL", "marca": "DELL", "modelo": "LATITUDE 5420", "proc": "Intel Core i5", "procRaw": null, "cpu": 2.6, "ram": 16, "disco": 477, "area": "APRENDIZ", "cargo": "APRENDIZ CONTABILIDAD", "quien": "Santiago Zapata Hurtado", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "1XD72F3", "placa": "34207", "tipo": "PORTATIL", "marca": "DELL", "modelo": "LATITUDE 5420", "proc": "Intel Core i5", "procRaw": null, "cpu": 2.6, "ram": 16, "disco": 477, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "LIBRE", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Procytec", "serial": "D6XZ3D3", "placa": "33300", "tipo": "PORTATIL", "marca": "DELL", "modelo": "LATITUDE 5420", "proc": "Intel Core i5", "procRaw": null, "cpu": 2.6, "ram": 16, "disco": 477, "area": "COBRANZA", "cargo": "CALL", "quien": "LEIDY LAURA ARCILA CARDENAS", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Servimercadeo", "serial": "8CG0418ZKC", "placa": "SYM019AIO", "tipo": "ALL IN ONE", "marca": "HP", "modelo": "HPpro One 400 G5 20.0 In ALL In One", "proc": "Intel Core i7", "procRaw": null, "cpu": 2.0, "ram": 8, "disco": 224, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Servimercadeo", "serial": "8CG9145S6C", "placa": "SMAIO", "tipo": "ALL IN ONE", "marca": "HP", "modelo": "HP ProOne 400 G4 20.0-in NT AiO", "proc": "Intel Core i7", "procRaw": null, "cpu": 2.4, "ram": 8, "disco": 477, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Servimercadeo", "serial": "8CG9480BHR", "placa": "SYMA10016", "tipo": "ALL IN ONE", "marca": "HP", "modelo": "HP ProOne 400 G4 20.0-in NT AiO", "proc": "Intel Core i3", "procRaw": null, "cpu": 3.7, "ram": 8, "disco": 224, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Servimercadeo", "serial": "8CG0419XNF", "placa": "AIO026", "tipo": "ALL IN ONE", "marca": "HP", "modelo": "HPpro One 400 G5 20.0 In ALL In One", "proc": "Intel Core i7", "procRaw": null, "cpu": 2.0, "ram": 8, "disco": 477, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Servimercadeo", "serial": "8CG9145S5T", "placa": "SMAIO015", "tipo": "ALL IN ONE", "marca": "HP", "modelo": "HP ProOne 400 G4 20.0-in NT AiO", "proc": "Intel Core i7", "procRaw": null, "cpu": 2.4, "ram": 8, "disco": 477, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Servimercadeo", "serial": "8CG9145S3T", "placa": null, "tipo": "ALL IN ONE", "marca": "HP", "modelo": "HP ProOne 400 G4 20.0-in NT AiO", "proc": "Intel Core i7", "procRaw": null, "cpu": 2.4, "ram": 8, "disco": 477, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Servimercadeo", "serial": "8CG9480B2Z", "placa": "SYMAIO013", "tipo": "ALL IN ONE", "marca": "HP", "modelo": "HP ProOne 400 G4 20.0-in NT AiO", "proc": "Intel Core i7", "procRaw": null, "cpu": 2.4, "ram": 8, "disco": 477, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Servimercadeo", "serial": "8CG9364YKS", "placa": "SYM008AIO", "tipo": "ALL IN ONE", "marca": "HP", "modelo": "HP ProOne600 g4 21.5 in Not Touh", "proc": "Intel Core i3", "procRaw": null, "cpu": 3.2, "ram": 12, "disco": 224, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Servimercadeo", "serial": "8CG0418ZJS", "placa": "SYMA020AIO", "tipo": "ALL IN ONE", "marca": "HP", "modelo": "HP ProOne 400 G4 20.0-in NT AiO", "proc": "Intel Core i7", "procRaw": null, "cpu": 2.0, "ram": 8, "disco": 224, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Servimercadeo", "serial": "8CG9145S3Y", "placa": "SMAIO013", "tipo": "ALL IN ONE", "marca": "HP", "modelo": "HP ProOne 400 G4 20.0-in NT AiO", "proc": "Intel Core i7", "procRaw": null, "cpu": 2.4, "ram": 8, "disco": 224, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": true, "okSinSerial": false}, {"empresa": "Servimercadeo", "serial": "8CG9145S3V", "placa": "SMAIO012", "tipo": "ALL IN ONE", "marca": "HP", "modelo": "HP ProOne 400 G4 20.0-in NT AiO", "proc": "Intel Core i7", "procRaw": null, "cpu": 2.4, "ram": 8, "disco": 477, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Servimercadeo", "serial": null, "placa": "SMAIO022", "tipo": "ALL IN ONE", "marca": "HP", "modelo": "HP ProOne 400 G4 20.0-in NT AiO", "proc": "Intel Core i7", "procRaw": null, "cpu": 2.4, "ram": 8, "disco": 224, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Servimercadeo", "serial": "8CG0419XNG", "placa": "SYMAIO024", "tipo": "ALL IN ONE", "marca": "HP", "modelo": "HP ProOne 400 G4 20.0-in NT AiO", "proc": "Intel Core i7", "procRaw": null, "cpu": 2.0, "ram": 8, "disco": 224, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Servimercadeo", "serial": "8CG9480B27", "placa": "016AIO", "tipo": "ALL IN ONE", "marca": "HP", "modelo": "HP ProOne 400 G4 20.0-in NT AiO", "proc": "Intel Core i7", "procRaw": null, "cpu": 2.4, "ram": 8, "disco": 224, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR (CASA)", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Servimercadeo", "serial": "8CG9145S3Y", "placa": "SMAIO045", "tipo": "ALL IN ONE", "marca": "HP", "modelo": "HP ProOne 400 G4 20.0-in NT AiO", "proc": "Intel Core i7", "procRaw": null, "cpu": 2.4, "ram": 8, "disco": 224, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": true, "okSinSerial": false}, {"empresa": "Servimercadeo", "serial": "8CG9480BH0", "placa": null, "tipo": "ALL IN ONE", "marca": "HP", "modelo": "HP ProOne 400 G4 20.0-in NT AiO", "proc": "Intel Core i7", "procRaw": null, "cpu": 2.4, "ram": 8, "disco": 224, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Servimercadeo", "serial": "8CG0418ZK0", "placa": "SYMA1IO018", "tipo": "ALL IN ONE", "marca": "HP", "modelo": "HP ProOne 400 G4 20.0-in NT AiO", "proc": "Intel Core i7", "procRaw": null, "cpu": 2.4, "ram": 8, "disco": 224, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR(CASA)", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Servimercadeo", "serial": "8CG9145S4M", "placa": null, "tipo": "ALL IN ONE", "marca": "HP", "modelo": "HP ProOne 400 G4 20.0-in NT AiO", "proc": "Intel Core i7", "procRaw": null, "cpu": 2.4, "ram": 8, "disco": 224, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Servimercadeo", "serial": "8CG9480BHQ", "placa": null, "tipo": "ALL IN ONE", "marca": "HP", "modelo": "HP ProOne 400 G4 20.0-in NT AiO", "proc": "Intel Core i7", "procRaw": null, "cpu": 2.4, "ram": 8, "disco": 224, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Servimercadeo", "serial": "8CN20907VX", "placa": null, "tipo": "ALL IN ONE", "marca": "HP", "modelo": "HP ProOne 400 G4 20.0-in NT AiO", "proc": "Intel Core i7", "procRaw": null, "cpu": 2.4, "ram": 8, "disco": 224, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Servimercadeo", "serial": "8CG9145S3H", "placa": null, "tipo": "ALL IN ONE", "marca": "HP", "modelo": "HP ProOne 400 G4 20.0-in NT AiO", "proc": "Intel Core i7", "procRaw": null, "cpu": 2.4, "ram": 8, "disco": 447, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Servimercadeo", "serial": "8CG9480BHN", "placa": null, "tipo": "ALL IN ONE", "marca": "HP", "modelo": "HP ProOne 400 G4 20.0-in NT AiO", "proc": "Intel Core i7", "procRaw": null, "cpu": 2.4, "ram": 8, "disco": 466, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Moviaval", "serial": "5HQ2JB2", "placa": null, "tipo": "TORRE Y PANTALLA", "marca": "DELL", "modelo": "optiplex3040", "proc": "Intel Core i3", "procRaw": null, "cpu": 3.7, "ram": 12, "disco": 239, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Moviaval", "serial": "B7811Q2", "placa": null, "tipo": "TORRE Y PANTALLA", "marca": "DELL", "modelo": "optiplex3060", "proc": "Intel Core i5", "procRaw": null, "cpu": 3.0, "ram": 8, "disco": 112, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Moviaval", "serial": "10MRQG2", "placa": null, "tipo": "TORRE Y PANTALLA", "marca": "DELL", "modelo": "VOSTRO3250", "proc": "Intel Core i3", "procRaw": null, "cpu": 3.7, "ram": 12, "disco": 239, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Moviaval", "serial": "5T1GJB2", "placa": null, "tipo": "TORRE Y PANTALLA", "marca": "DELL", "modelo": "optiplex3040", "proc": "Intel Core i3", "procRaw": null, "cpu": 3.7, "ram": 12, "disco": 239, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Moviaval", "serial": "B7XJPD2", "placa": null, "tipo": "TORRE Y PANTALLA", "marca": "DELL", "modelo": "optiplex3040", "proc": "Intel Core i3", "procRaw": null, "cpu": 3.7, "ram": 8, "disco": 466, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Moviaval", "serial": "9RBXRD2", "placa": null, "tipo": "TORRE Y PANTALLA", "marca": "DELL", "modelo": "optiplex3040", "proc": "Intel Core i3", "procRaw": null, "cpu": 3.2, "ram": 12, "disco": 239, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Moviaval", "serial": "9DHPKH2", "placa": null, "tipo": "TORRE Y PANTALLA", "marca": "DELL", "modelo": "optiPlex 3050", "proc": "Intel Core i3", "procRaw": null, "cpu": 3.9, "ram": 8, "disco": 239, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Moviaval", "serial": "75D4DP2", "placa": null, "tipo": "TORRE Y PANTALLA", "marca": "DELL", "modelo": "optiplex3050", "proc": "Intel Core i5", "procRaw": null, "cpu": 3.4, "ram": 12, "disco": 932, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Moviaval", "serial": "3HKQQG2", "placa": null, "tipo": "TORRE Y PANTALLA", "marca": "DELL", "modelo": "VOSTRO3250", "proc": "Intel Core i3", "procRaw": null, "cpu": 3.7, "ram": 8, "disco": 112, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Moviaval", "serial": "8L533F3", "placa": null, "tipo": "TORRE Y PANTALLA", "marca": "DELL", "modelo": "optiplex3050", "proc": "Intel Core i3", "procRaw": null, "cpu": 3.7, "ram": 8, "disco": 112, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Moviaval", "serial": "B7PDPD2", "placa": null, "tipo": "TORRE Y PANTALLA", "marca": "DELL", "modelo": "optiplex3040", "proc": "Intel Core i3", "procRaw": null, "cpu": 3.7, "ram": 16, "disco": 239, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Moviaval", "serial": "86VFPD2", "placa": null, "tipo": "TORRE Y PANTALLA", "marca": "DELL", "modelo": "optiplex3040", "proc": "Intel Core i3", "procRaw": null, "cpu": 3.7, "ram": 8, "disco": 239, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Moviaval", "serial": "B7VCPD2", "placa": null, "tipo": "TORRE Y PANTALLA", "marca": "DELL", "modelo": "optiplex3040", "proc": "Intel Core i3", "procRaw": null, "cpu": 3.7, "ram": 8, "disco": 239, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Moviaval", "serial": "GJNHFB2", "placa": null, "tipo": "TORRE Y PANTALLA", "marca": "DELL", "modelo": "optiplex3040", "proc": "Intel Core i3", "procRaw": null, "cpu": 3.7, "ram": 12, "disco": 239, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Moviaval", "serial": "9CWQKH2", "placa": null, "tipo": "TORRE Y PANTALLA", "marca": "DELL", "modelo": "optiplex3050", "proc": "Intel Core i3", "procRaw": null, "cpu": 3.9, "ram": 8, "disco": 238, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Moviaval", "serial": "B6VFPD2", "placa": null, "tipo": "TORRE Y PANTALLA", "marca": "DELL", "modelo": "optiplex3051", "proc": "Intel Core i3", "procRaw": null, "cpu": 3.9, "ram": 8, "disco": 238, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Moviaval", "serial": "FRLQYB2", "placa": null, "tipo": "PORTATIL", "marca": "DELL", "modelo": "inspiron 3458", "proc": "Intel Core i3", "procRaw": null, "cpu": 2.0, "ram": 12, "disco": 447, "area": "COBRANZA", "cargo": "HOME OFFICE", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Moviaval", "serial": "5KYKZF2", "placa": null, "tipo": "PORTATIL", "marca": "DELL", "modelo": "inspiron 3459", "proc": "Intel Core i3", "procRaw": null, "cpu": 2.0, "ram": 12, "disco": 447, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Moviaval", "serial": "CND0260DRB", "placa": null, "tipo": "PORTATIL", "marca": "HP", "modelo": "HP 250 G7 Notebook PC", "proc": "Intel Core i7", "procRaw": null, "cpu": 1.3, "ram": 16, "disco": 466, "area": "IT SUPPORT", "cargo": "CALL -HOME-", "quien": "CRISTIAN MENDOZA", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Moviaval", "serial": "LR081DFT", "placa": null, "tipo": "PORTATIL", "marca": "LENOVO", "modelo": "80SX", "proc": "Intel Core i5", "procRaw": null, "cpu": 2.3, "ram": 12, "disco": 466, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "LIBRE", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Moviaval", "serial": "CND10243DS", "placa": null, "tipo": "PORTATIL", "marca": "HP", "modelo": "HP 250 G7 Notebook PC", "proc": "Intel Core i7", "procRaw": null, "cpu": 1.3, "ram": 8, "disco": 477, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "LIBRE", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Moviaval", "serial": "CND0260D76", "placa": null, "tipo": "PORTATIL", "marca": "HP", "modelo": "HP 250 G7 Notebook PC", "proc": "Intel Core i7", "procRaw": null, "cpu": 1.3, "ram": 16, "disco": 466, "area": "COBRANZA", "cargo": "CALL", "quien": "WILLIAM ANDRES NOREÑA JARAMILLO", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Moviaval", "serial": "ABCDEF0123", "placa": null, "tipo": "PORTATIL", "marca": "HP", "modelo": "InsydeH2O", "proc": "Intel Core i7", "procRaw": null, "cpu": 1.3, "ram": 8, "disco": 477, "area": "ABOGADO", "cargo": "JURIDICA", "quien": "Maria Alexandra Osorio Taborda", "estado": "ASIGNADO", "okSerial": true, "okDup": false, "okSinSerial": false}, {"empresa": "Moviaval", "serial": null, "placa": null, "tipo": "PORTATIL", "marca": "DELL", "modelo": "LATITUDE5450", "proc": "Intel Core Ultra 5", "procRaw": null, "cpu": 1.3, "ram": 16, "disco": 512, "area": "COBRANZA", "cargo": "SUPERVISOR", "quien": "MARIA CAMILA MEJIA", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": true}, {"empresa": "Moviaval", "serial": "CND0260D68", "placa": null, "tipo": "PORTATIL", "marca": "HP", "modelo": "HP 250 G7 Notebook PC", "proc": "Intel Core i7", "procRaw": null, "cpu": 1.3, "ram": 16, "disco": 447, "area": "COBRANZA", "cargo": "SUPERVISOR", "quien": "ALEXANDER MANSO", "estado": "ASIGNADO", "okSerial": false, "okDup": true, "okSinSerial": false}, {"empresa": "Moviaval", "serial": "CND0260D68", "placa": null, "tipo": "PORTATIL", "marca": "HP", "modelo": "HP 250 G7 Notebook PC", "proc": "Intel Core i7", "procRaw": null, "cpu": 1.3, "ram": 16, "disco": 447, "area": "COBRANZA", "cargo": "BACKOFFICE", "quien": "SANTIAGO CEBALLO HENAO", "estado": "ASIGNADO", "okSerial": false, "okDup": true, "okSinSerial": false}, {"empresa": "Moviaval", "serial": "CND102439", "placa": null, "tipo": "PORTATIL", "marca": "HP", "modelo": "HP 250 G7 Notebook PC", "proc": "Intel Core i7", "procRaw": null, "cpu": 1.3, "ram": 8, "disco": 466, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Moviaval", "serial": "CND0260D5N", "placa": null, "tipo": "PORTATIL", "marca": "HP", "modelo": "HP 250 G7 Notebook PC", "proc": "Intel Core i7", "procRaw": null, "cpu": 1.3, "ram": 8, "disco": 466, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "LIBRE", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Moviaval", "serial": "CND0260DKJ", "placa": null, "tipo": "PORTATIL", "marca": "HP", "modelo": "HP 250 G7 Notebook PC", "proc": "Intel Core i7", "procRaw": null, "cpu": 1.3, "ram": 8, "disco": 477, "area": "ABOGADO", "cargo": "JURIDICA", "quien": "PAULA ALEJANDRA MOJICA RODRIGUEZ", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Moviaval", "serial": "PF21JZXH", "placa": null, "tipo": "PORTATIL", "marca": "LENOVO", "modelo": "81W6", "proc": "Intel Core i5", "procRaw": null, "cpu": 1.5, "ram": 12, "disco": 447, "area": "COBRANZA", "cargo": "CALL", "quien": "DOÑA LUZ", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Moviaval", "serial": "J5XVBL2", "placa": null, "tipo": "PORTATIL", "marca": "DELL", "modelo": "VOSTR0 14-3468", "proc": "Intel Core i5", "procRaw": null, "cpu": 2.5, "ram": 8, "disco": 466, "area": "COBRANZA", "cargo": "CALL", "quien": "REVISION( Hace falta cambio de pila)", "estado": "REVISION", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Moviaval", "serial": "43XVBL2", "placa": null, "tipo": "PORTATIL", "marca": "DELL", "modelo": "VOSTR0 14-3468", "proc": "Intel Core i5", "procRaw": null, "cpu": 2.5, "ram": 12, "disco": 466, "area": "COBRANZA", "cargo": "CALL", "quien": "Bateria mala", "estado": "LIBRE", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Moviaval", "serial": "CND0260DBR", "placa": null, "tipo": "PORTATIL", "marca": "HP", "modelo": "HP 250 G7 Notebook PC", "proc": "Intel Core i7", "procRaw": null, "cpu": 1.5, "ram": 8, "disco": 447, "area": "COBRANZA", "cargo": "IT SUPPORT", "quien": "Dilan Steven daza Tamayo", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Moviaval", "serial": "CLZ8XZ2", "placa": null, "tipo": "PORTATIL", "marca": "DELL", "modelo": "LATITUDE3400", "proc": "Intel Core i5", "procRaw": null, "cpu": 1.6, "ram": 16, "disco": 1167, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Moviaval", "serial": "CND102439D", "placa": null, "tipo": "PORTATIL", "marca": "HP", "modelo": "HP 250 G7 Notebook PC", "proc": "Intel Core i7", "procRaw": null, "cpu": 1.3, "ram": 8, "disco": 466, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "LIBRE", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Moviaval", "serial": "PW00TP6S", "placa": null, "tipo": "PORTATIL", "marca": "LENOVO", "modelo": "20R30039US", "proc": "Intel Core i5", "procRaw": null, "cpu": 1.7, "ram": 16, "disco": 238, "area": "COBRANZA", "cargo": "CALL", "quien": "ASESOR", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Moviaval", "serial": "CND1132ZJX", "placa": null, "tipo": "PORTATIL", "marca": "HP", "modelo": "HP 250 G7 Notebook PC", "proc": "Intel Core i7", "procRaw": null, "cpu": 1.3, "ram": 16, "disco": 894, "area": "COBRANZA", "cargo": "CALL -HOME-", "quien": "ASESOR ( LUIS CARLOS ) CASA", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Movistar", "serial": "C2L344096Q", "placa": null, "tipo": "PORTATIL", "marca": "HP", "modelo": "HP EliteBook 840 14 inch G10 Notebook PC", "proc": "Intel Core i5", "procRaw": null, "cpu": 1.3, "ram": 16, "disco": 512, "area": "MARY ROSADO", "cargo": "TALENTO HUMANO", "quien": "Mary Rosado", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Movistar", "serial": "C2L3440986", "placa": null, "tipo": "PORTATIL", "marca": "HP", "modelo": "HP EliteBook 840 14 inch G10 Notebook PC", "proc": "Intel Core i5", "procRaw": null, "cpu": 1.3, "ram": 16, "disco": 512, "area": "LUISA MEDINA", "cargo": "TALENTO HUMANO", "quien": "Luisa Medina", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Movistar", "serial": "7W6600LC", "placa": null, "tipo": "PORTATIL", "marca": "HP", "modelo": "Hp Elitebook 840 Notebook pc", "proc": "Intel Core i7", "procRaw": null, "cpu": 3.0, "ram": 16, "disco": 477, "area": "YULIANA", "cargo": "CONTABLE", "quien": "Yuliana", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Movistar", "serial": "45VSKB4", "placa": null, "tipo": "PORTATIL", "marca": "DELL", "modelo": "Dell Pro 14 Pc 14250", "proc": "Intel Core i5", "procRaw": null, "cpu": 1.4, "ram": 16, "disco": 475, "area": "LINA RIOS", "cargo": "JURIDICA", "quien": "Lina Rios", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}, {"empresa": "Movistar", "serial": "7VRBRW3", "placa": null, "tipo": "PORTATIL", "marca": "DELL", "modelo": "latitude5440", "proc": "Intel Core i5", "procRaw": null, "cpu": 1.3, "ram": 16, "disco": 512, "area": "LAURA ANALISTA", "cargo": "CONTABLE", "quien": "Laura analista", "estado": "ASIGNADO", "okSerial": false, "okDup": false, "okSinSerial": false}], "perifericos": [{"id": "Teclado 01", "tipo": "Teclado", "marca": "HP", "nota": null, "estado": "BUENO"}, {"id": "Mouse 01", "tipo": "Mouse", "marca": "DELL", "nota": null, "estado": "BUENO"}, {"id": "Teclado 02", "tipo": "Teclado", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Mouse 02", "tipo": "Mouse", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Teclado 03", "tipo": "Teclado", "marca": "LOGITECH", "nota": null, "estado": "BUENO"}, {"id": "Mouse 03", "tipo": "Mouse", "marca": "HP", "nota": null, "estado": "BUENO"}, {"id": "Teclado 04", "tipo": "Teclado", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Mouse 04", "tipo": "Mouse", "marca": "DELL", "nota": null, "estado": "BUENO"}, {"id": "Teclado 05", "tipo": "Teclado", "marca": "LOGITECH", "nota": null, "estado": "BUENO"}, {"id": "Mouse 05", "tipo": "Mouse", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Teclado 06", "tipo": "Teclado", "marca": "DELL", "nota": null, "estado": "BUENO"}, {"id": "Mouse 06", "tipo": "Mouse", "marca": "DELL", "nota": null, "estado": "BUENO"}, {"id": "Teclado 07", "tipo": "Teclado", "marca": "LOGITECH", "nota": null, "estado": "BUENO"}, {"id": "Mouse 07", "tipo": "Mouse", "marca": "HP", "nota": null, "estado": "BUENO"}, {"id": "Teclado 08", "tipo": "Teclado", "marca": "DELL", "nota": null, "estado": "BUENO"}, {"id": "Mouse 08", "tipo": "Mouse", "marca": "DELL", "nota": null, "estado": "BUENO"}, {"id": "Teclado 09", "tipo": "Teclado", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Mouse 09", "tipo": "Mouse", "marca": "XUE", "nota": null, "estado": "BUENO"}, {"id": "Teclado 10", "tipo": "Teclado", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Mouse 10", "tipo": "Mouse", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Teclado 11", "tipo": "Teclado", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Mouse 11", "tipo": "Mouse", "marca": "DELL", "nota": null, "estado": "BUENO"}, {"id": "Teclado 12", "tipo": "Teclado", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Mouse 12", "tipo": "Mouse", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Teclado 13", "tipo": "Teclado", "marca": "LENOVO", "nota": null, "estado": "BUENO"}, {"id": "Mouse 13", "tipo": "Mouse", "marca": "GENIUS", "nota": "(MS18) Servimercadeo", "estado": "BUENO"}, {"id": "Teclado 14", "tipo": "Teclado", "marca": "DELL", "nota": null, "estado": "BUENO"}, {"id": "Mouse 14", "tipo": "Mouse", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Teclado 15", "tipo": "Teclado", "marca": "TRUST", "nota": null, "estado": "BUENO"}, {"id": "Mouse 15", "tipo": "Mouse", "marca": "LOGITECH", "nota": null, "estado": "BUENO"}, {"id": "Teclado 16", "tipo": "Teclado", "marca": "DELL", "nota": null, "estado": "BUENO"}, {"id": "Mouse 16", "tipo": "Mouse", "marca": "LOGITECH", "nota": null, "estado": "BUENO"}, {"id": "Teclado 17", "tipo": "Teclado", "marca": "HP", "nota": "Prestado a jhoana andica", "estado": "BUENO"}, {"id": "Mouse 17", "tipo": "Mouse", "marca": "GENIUS", "nota": "Prestado a jhoana andica", "estado": "BUENO"}, {"id": "Teclado 18", "tipo": "Teclado", "marca": "DELL", "nota": null, "estado": "BUENO"}, {"id": "Mouse 18", "tipo": "Mouse", "marca": "HP", "nota": "(34F9) Servimercadeo", "estado": "BUENO"}, {"id": "Teclado 19", "tipo": "Teclado", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Mouse 19", "tipo": "Mouse", "marca": "LOGITECH", "nota": null, "estado": "BUENO"}, {"id": "Teclado 20", "tipo": "Teclado", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Mouse 20", "tipo": "Mouse", "marca": "LENOVO", "nota": null, "estado": "BUENO"}, {"id": "Teclado 21", "tipo": "Teclado", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Mouse 21", "tipo": "Mouse", "marca": "DELL", "nota": null, "estado": "BUENO"}, {"id": "Teclado 22", "tipo": "Teclado", "marca": "HP", "nota": "(019) Servimercadeo", "estado": "BUENO"}, {"id": "Mouse 22", "tipo": "Mouse", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Teclado 23", "tipo": "Teclado", "marca": "HP", "nota": null, "estado": "BUENO"}, {"id": "Mouse 23", "tipo": "Mouse", "marca": "DELL", "nota": null, "estado": "BUENO"}, {"id": "Teclado 24", "tipo": "Teclado", "marca": "LOGITECH", "nota": null, "estado": "BUENO"}, {"id": "Mouse 24", "tipo": "Mouse", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Teclado 25", "tipo": "Teclado", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Mouse 25", "tipo": "Mouse", "marca": "LOGITECH", "nota": null, "estado": "BUENO"}, {"id": "Teclado 26", "tipo": "Teclado", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Mouse 26", "tipo": "Mouse", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Teclado 27", "tipo": "Teclado", "marca": "DELL", "nota": null, "estado": "BUENO"}, {"id": "Mouse 27", "tipo": "Mouse", "marca": "DELL", "nota": null, "estado": "BUENO"}, {"id": "Teclado 28", "tipo": "Teclado", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Mouse 28", "tipo": "Mouse", "marca": "HP", "nota": null, "estado": "BUENO"}, {"id": "Teclado 29", "tipo": "Teclado", "marca": "MTG", "nota": null, "estado": "BUENO"}, {"id": "Mouse 29", "tipo": "Mouse", "marca": "DELL", "nota": null, "estado": "BUENO"}, {"id": "Teclado 30", "tipo": "Teclado", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Mouse 30", "tipo": "Mouse", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Teclado 31", "tipo": "Teclado", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Mouse 31", "tipo": "Mouse", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Teclado 32", "tipo": "Teclado", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Mouse 32", "tipo": "Mouse", "marca": "HP", "nota": null, "estado": "BUENO"}, {"id": "Teclado 33", "tipo": "Teclado", "marca": "HP", "nota": null, "estado": "BUENO"}, {"id": "Mouse 33", "tipo": "Mouse", "marca": "DELL", "nota": null, "estado": "BUENO"}, {"id": "Teclado 34", "tipo": "Teclado", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Mouse 34", "tipo": "Mouse", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Teclado 35", "tipo": "Teclado", "marca": "DELL", "nota": null, "estado": "BUENO"}, {"id": "Mouse 35", "tipo": "Mouse", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Teclado 36", "tipo": "Teclado", "marca": "DELL", "nota": null, "estado": "BUENO"}, {"id": "Mouse 36", "tipo": "Mouse", "marca": "GENIUS", "nota": "(SMAIO013) Servimercadeo", "estado": "BUENO"}, {"id": "Teclado 37", "tipo": "Teclado", "marca": "GENIUS", "nota": "(017) Servimercadeo", "estado": "BUENO"}, {"id": "Mouse 37", "tipo": "Mouse", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Teclado 38", "tipo": "Teclado", "marca": "HP", "nota": "(013) Servimercadeo", "estado": "BUENO"}, {"id": "Mouse 38", "tipo": "Mouse", "marca": "XUE", "nota": null, "estado": "BUENO"}, {"id": "Teclado 39", "tipo": "Teclado", "marca": "HP", "nota": "(020) Servimercadeo", "estado": "BUENO"}, {"id": "Mouse 39", "tipo": "Mouse", "marca": "HP", "nota": null, "estado": "BUENO"}, {"id": "Teclado 41", "tipo": "Teclado", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Mouse 41", "tipo": "Mouse", "marca": "HP", "nota": null, "estado": "BUENO"}, {"id": "Teclado 42", "tipo": "Teclado", "marca": "LENOVO", "nota": null, "estado": "BUENO"}, {"id": "Mouse 42", "tipo": "Mouse", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Teclado 43", "tipo": "Teclado", "marca": "DELL", "nota": null, "estado": "BUENO"}, {"id": "Mouse 43", "tipo": "Mouse", "marca": "DELL", "nota": null, "estado": "BUENO"}, {"id": "Teclado 44", "tipo": "Teclado", "marca": "HP", "nota": "(O012) Servimercadeo", "estado": "BUENO"}, {"id": "Mouse 44", "tipo": "Mouse", "marca": "DELL", "nota": null, "estado": "BUENO"}, {"id": "Teclado 45", "tipo": "Teclado", "marca": "HP", "nota": null, "estado": "BUENO"}, {"id": "Mouse 45", "tipo": "Mouse", "marca": "DELL", "nota": null, "estado": "BUENO"}, {"id": "Teclado 46", "tipo": "Teclado", "marca": "DELL", "nota": "(0F2) Servimercadeo", "estado": "BUENO"}, {"id": "Mouse 46", "tipo": "Mouse", "marca": "HP", "nota": "(017) Servimercadeo", "estado": "BUENO"}, {"id": "Teclado 48", "tipo": "Teclado", "marca": "MICROSOFT", "nota": null, "estado": "BUENO"}, {"id": "Mouse 48", "tipo": "Mouse", "marca": "HP", "nota": null, "estado": "BUENO"}, {"id": "Teclado 49", "tipo": "Teclado", "marca": "DELL", "nota": null, "estado": "BUENO"}, {"id": "Mouse 49", "tipo": "Mouse", "marca": "DELL", "nota": null, "estado": "BUENO"}, {"id": "Teclado 50", "tipo": "Teclado", "marca": "DELL", "nota": "(08NY) Servimercadeo", "estado": "BUENO"}, {"id": "Mouse 50", "tipo": "Mouse", "marca": "DELL", "nota": null, "estado": "BUENO"}, {"id": "Teclado 51", "tipo": "Teclado", "marca": "DELL", "nota": null, "estado": "BUENO"}, {"id": "Mouse 51", "tipo": "Mouse", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Teclado 52", "tipo": "Teclado", "marca": "DELL", "nota": null, "estado": "BUENO"}, {"id": "Mouse 52", "tipo": "Mouse", "marca": "GENIUS", "nota": "(MS33) Servimercadeo", "estado": "BUENO"}, {"id": "Teclado 53", "tipo": "Teclado", "marca": "DELL", "nota": null, "estado": "BUENO"}, {"id": "Mouse 53", "tipo": "Mouse", "marca": "HP", "nota": null, "estado": "BUENO"}, {"id": "Teclado 54", "tipo": "Teclado", "marca": "DELL", "nota": null, "estado": "BUENO"}, {"id": "Mouse 54", "tipo": "Mouse", "marca": "HP", "nota": null, "estado": "BUENO"}, {"id": "Teclado 55", "tipo": "Teclado", "marca": "DELL", "nota": null, "estado": "BUENO"}, {"id": "Mouse 55", "tipo": "Mouse", "marca": "LOGITECH", "nota": null, "estado": "BUENO"}, {"id": "Teclado 56", "tipo": "Teclado", "marca": "DELL", "nota": null, "estado": "BUENO"}, {"id": "Mouse 56", "tipo": "Mouse", "marca": "HP", "nota": null, "estado": "BUENO"}, {"id": "Teclado 57", "tipo": "Teclado", "marca": "DELL", "nota": null, "estado": "BUENO"}, {"id": "Mouse 57", "tipo": "Mouse", "marca": "LOGITECH", "nota": null, "estado": "BUENO"}, {"id": "Teclado 58", "tipo": "Teclado", "marca": "DELL", "nota": null, "estado": "BUENO"}, {"id": "35G9", "tipo": "Mouse", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Teclado 59", "tipo": "Teclado", "marca": null, "nota": null, "estado": "BUENO"}, {"id": "35C9", "tipo": "Mouse", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Teclado 60", "tipo": "Teclado", "marca": null, "nota": null, "estado": "BUENO"}, {"id": "Mouse 58", "tipo": "Mouse", "marca": "GENIUS", "nota": "(008A) Servimercadeo", "estado": "BUENO"}, {"id": "Teclado 61", "tipo": "Teclado", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Mouse 59", "tipo": "Mouse", "marca": "UNITEC", "nota": null, "estado": "BUENO"}, {"id": "Teclado 62", "tipo": "Teclado", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Mouse60", "tipo": "Mouse", "marca": "DELL", "nota": null, "estado": "BUENO"}, {"id": "Teclado 63", "tipo": "Teclado", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Mouse 61", "tipo": "Mouse", "marca": "DELL", "nota": null, "estado": "BUENO"}, {"id": "Teclado 64", "tipo": "Teclado", "marca": "HP", "nota": null, "estado": "BUENO"}, {"id": "Mouse62", "tipo": "Mouse", "marca": "LOGITECH", "nota": null, "estado": "BUENO"}, {"id": "Teclado 65 (BEXJLOB5YB7O8I)", "tipo": "Teclado", "marca": "HP", "nota": null, "estado": "BUENO"}, {"id": "Mouse63", "tipo": "Mouse", "marca": null, "nota": null, "estado": "BUENO"}, {"id": "Teclado 66", "tipo": "Teclado", "marca": "HP", "nota": null, "estado": "BUENO"}, {"id": "Mouse64", "tipo": "Mouse", "marca": null, "nota": null, "estado": "BUENO"}, {"id": "Teclado 67", "tipo": "Teclado", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Mouse65", "tipo": "Mouse", "marca": null, "nota": null, "estado": "BUENO"}, {"id": "Teclado 68", "tipo": "Teclado", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Mouse66", "tipo": "Mouse", "marca": "GENERICO", "nota": null, "estado": "BUENO"}, {"id": "Teclado 69", "tipo": "Teclado", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Mouse67", "tipo": "Mouse", "marca": "GENERICO", "nota": null, "estado": "BUENO"}, {"id": "Teclado 70", "tipo": "Teclado", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Mouse68", "tipo": "Mouse", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Teclado 71", "tipo": "Teclado", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Mouse69", "tipo": "Mouse", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Teclado 72", "tipo": "Teclado", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Mouse70", "tipo": "Mouse", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Teclado 73", "tipo": "Teclado", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Mouse 71", "tipo": "Mouse", "marca": "HP", "nota": null, "estado": "BUENO"}, {"id": "Teclado 74", "tipo": "Teclado", "marca": "GENIUS", "nota": "(Serial: 36A98517900528)", "estado": "BUENO"}, {"id": "Mouse72", "tipo": "Mouse", "marca": "HP", "nota": null, "estado": "BUENO"}, {"id": "Teclado 75", "tipo": "Teclado", "marca": "GENIUS", "nota": "(Serial: 36A98517900533)", "estado": "BUENO"}, {"id": "Mouse73", "tipo": "Mouse", "marca": "HP", "nota": null, "estado": "BUENO"}, {"id": "Teclado 76", "tipo": "Teclado", "marca": "GENIUS", "nota": "(Serial: 36A98517900532)", "estado": "BUENO"}, {"id": "Mouse74", "tipo": "Mouse", "marca": "GENIUS", "nota": null, "estado": "BUENO"}, {"id": "Teclado 77", "tipo": "Teclado", "marca": "GENIUS", "nota": "(Serial: 36A98517900531)", "estado": "BUENO"}, {"id": "Mouse75", "tipo": "Mouse", "marca": "GENIUS", "nota": "(Serial: 35J98281503402)", "estado": "BUENO"}, {"id": "Teclado 78", "tipo": "Teclado", "marca": "GENIUS", "nota": "(Serial: 36A98517900530)", "estado": "BUENO"}, {"id": "Mouse76", "tipo": "Mouse", "marca": "GENIUS", "nota": "(Serial: 35j98281503408)", "estado": "BUENO"}, {"id": "Teclado 79", "tipo": "Teclado", "marca": "GENIUS", "nota": "(Serial: 36A98517900568)", "estado": "BUENO"}, {"id": "Mouse77", "tipo": "Mouse", "marca": "GENIUS", "nota": "(Serial: 35j98281503409)", "estado": "BUENO"}, {"id": "Teclado 80", "tipo": "Teclado", "marca": "GENIUS", "nota": "(Serial: 36A98517900580)", "estado": "BUENO"}, {"id": "Mouse78", "tipo": "Mouse", "marca": "GENIUS", "nota": "(Serial: 35j98281503481)", "estado": "BUENO"}, {"id": "Teclado 81", "tipo": "Teclado", "marca": "GENIUS", "nota": "(Serial: 36A98517900571)", "estado": "BUENO"}, {"id": "Mouse79", "tipo": "Mouse", "marca": "GENIUS", "nota": "(Serial: 35j98281503404)", "estado": "BUENO"}, {"id": "Teclado 82", "tipo": "Teclado", "marca": "GENIUS", "nota": "(Serial: 36A98517900570)", "estado": "BUENO"}, {"id": "Mouse80", "tipo": "Mouse", "marca": "GENIUS", "nota": "(Serial: 35j98281503458)", "estado": "BUENO"}, {"id": "Teclado 83", "tipo": "Teclado", "marca": "GENIUS", "nota": "(Serial: 36A98517900302)", "estado": "BUENO"}, {"id": "Mouse81", "tipo": "Mouse", "marca": "GENIUS", "nota": "(Serial: 35j98281503457)", "estado": "BUENO"}, {"id": "Teclado 84", "tipo": "Teclado", "marca": "GENIUS", "nota": "(Serial: 36A98517900307)", "estado": "BUENO"}, {"id": "Mouse82", "tipo": "Mouse", "marca": "GENIUS", "nota": "(Serial: 35j98281503442)", "estado": "BUENO"}, {"id": "Teclado 85", "tipo": "Teclado", "marca": "GENIUS", "nota": "(Serial: 36A98517900303)", "estado": "BUENO"}, {"id": "Mouse83", "tipo": "Mouse", "marca": "GENIUS", "nota": "(Serial: 35j98281503441)", "estado": "BUENO"}, {"id": "Teclado 86", "tipo": "Teclado", "marca": "GENIUS", "nota": "(Serial: 36A98517900301)", "estado": "BUENO"}, {"id": "Mouse84", "tipo": "Mouse", "marca": "HP", "nota": "(Serial: HQ-TRE71025)", "estado": "BUENO"}, {"id": "Teclado 87", "tipo": "Teclado", "marca": "GENIUS", "nota": "(Serial: 36A98517900306)", "estado": "BUENO"}, {"id": "Mouse85", "tipo": "Mouse", "marca": "GENIUS", "nota": "(Serial: 35J98281503427)", "estado": "BUENO"}, {"id": "Teclado 88", "tipo": "Teclado", "marca": "GENIUS", "nota": "(Serial: 36A98517900305)", "estado": "BUENO"}, {"id": "Mouse86", "tipo": "Mouse", "marca": "GENIUS", "nota": "(Serial: 35J98281503449)", "estado": "BUENO"}, {"id": "Teclado 89", "tipo": "Teclado", "marca": "GENIUS", "nota": "(Serial: 36A98517900310)", "estado": "BUENO"}, {"id": "Mouse87", "tipo": "Mouse", "marca": "GENIUS", "nota": "(Serial: 35J98281503447)", "estado": "BUENO"}, {"id": "Teclado 90", "tipo": "Teclado", "marca": "GENIUS", "nota": "(Serial: 36A98517900308", "estado": "BUENO"}, {"id": "Mouse88", "tipo": "Mouse", "marca": "GENIUS", "nota": "(Serial: 35J98281503437)", "estado": "BUENO"}, {"id": "Teclado 91", "tipo": "Teclado", "marca": "GENIUS", "nota": "(Serial: 36A98517900309", "estado": "BUENO"}, {"id": "Mouse89", "tipo": "Mouse", "marca": "GENIUS", "nota": "(Serial: 35J98281503443)", "estado": "BUENO"}, {"id": "Teclado 92", "tipo": "Teclado", "marca": "HP", "nota": "(Serial: BEXJL0AWYD62SU)", "estado": "BUENO"}, {"id": "Mouse90", "tipo": "Mouse", "marca": "GENIUS", "nota": "(Serial: 35J98281503422)", "estado": "BUENO"}, {"id": "Teclado 93", "tipo": "Teclado", "marca": "GENIUS", "nota": "(Serial:36A98517900111)", "estado": "BUENO"}, {"id": "Mouse91", "tipo": "Mouse", "marca": "GENIUS", "nota": "(Serial: 35J98281503430)", "estado": "BUENO"}, {"id": "Teclado 94", "tipo": "Teclado", "marca": "GENIUS", "nota": "(Serial:36A98517900112)", "estado": "BUENO"}, {"id": "Mouse92", "tipo": "Mouse", "marca": "GENIUS", "nota": "(Serial: 35J98281503424)", "estado": "BUENO"}, {"id": "Teclado 95", "tipo": "Teclado", "marca": "GENIUS", "nota": "(Serial:36A98517900119)", "estado": "BUENO"}, {"id": "Mouse93", "tipo": "Mouse", "marca": "GENIUS", "nota": "(Serial: 35J98281503436)", "estado": "BUENO"}, {"id": "Teclado 96", "tipo": "Teclado", "marca": "GENIUS", "nota": "(Serial:36A98517900120)", "estado": "BUENO"}, {"id": "Mouse94", "tipo": "Mouse", "marca": "LENOVO", "nota": "( Serial 3GB47B1698B )", "estado": "BUENO"}, {"id": "Teclado 97", "tipo": "Teclado", "marca": "GENIUS", "nota": "(Serial:36A98517900115)", "estado": "BUENO"}, {"id": "Mouse95", "tipo": "Mouse", "marca": "GENIUS", "nota": "( Serial 35L98452700980)", "estado": "BUENO"}, {"id": "Teclado 98", "tipo": "Teclado", "marca": "GENIUS", "nota": "(Serial:36A98517900113)", "estado": "BUENO"}, {"id": "Mouse96", "tipo": "Mouse", "marca": "GENIUS", "nota": "( Serial 35L98452700996)", "estado": "BUENO"}, {"id": "Teclado 99", "tipo": "Teclado", "marca": "GENIUS", "nota": "(Serial:36A98517900114)", "estado": "BUENO"}, {"id": "Mouse97", "tipo": "Mouse", "marca": "GENIUS", "nota": "( Serial 35L98452700968)", "estado": "BUENO"}, {"id": "Teclado 100", "tipo": "Teclado", "marca": "GENIUS", "nota": "(Serial:36A98517900117)", "estado": "BUENO"}, {"id": "Mouse98", "tipo": "Mouse", "marca": "GENIUS", "nota": "( Serial 35L98452700939)", "estado": "BUENO"}, {"id": "Teclado 101", "tipo": "Teclado", "marca": "GENIUS", "nota": "(Serial:36A98517900116)", "estado": "BUENO"}, {"id": "Mouse99", "tipo": "Mouse", "marca": "GENIUS", "nota": "( Serial 35L98452700948)", "estado": "BUENO"}, {"id": "Teclado 102", "tipo": "Teclado", "marca": "GENIUS", "nota": "(Serial:36A98517900118)", "estado": "BUENO"}, {"id": "Mouse100", "tipo": "Mouse", "marca": "GENIUS", "nota": "( Serial 35L98452700951)", "estado": "BUENO"}, {"id": "Teclado 103", "tipo": "Teclado", "marca": "GENIUS", "nota": "TECLADO SYM 003", "estado": "BUENO"}, {"id": "Mouse101", "tipo": "Mouse", "marca": "GENIUS", "nota": "( Serial 35L98452700914)", "estado": "BUENO"}, {"id": "Mouse102", "tipo": "Mouse", "marca": "GENIUS", "nota": "( Serial 35L98452700922)", "estado": "BUENO"}, {"id": "Mouse103", "tipo": "Mouse", "marca": "GENIUS", "nota": "( Serial 35L98452700936)", "estado": "BUENO"}, {"id": "Mouse104", "tipo": "Mouse", "marca": "GENIUS", "nota": "( Serial 35L98452700985)", "estado": "BUENO"}, {"id": "Mouse105", "tipo": "Mouse", "marca": "HP", "nota": "SYM 003", "estado": "BUENO"}], "diademas": [{"quien": "KELLY JOHANA BARRAGAN VILLANUEVA", "marca": "Plantronics", "serial": "35UHM3"}, {"quien": "FRANCY LORENA DIAZ WALTERO", "marca": "Plantronics", "serial": "2J3VYG"}, {"quien": "LUZ ADRIANA GOMEZ MORALES", "marca": "Plantronics", "serial": "33LP9R"}, {"quien": "MARTHA LILIANA CORTES LOAIZA", "marca": "Plantronics", "serial": "35JK63"}, {"quien": "YEISON MAURICIO VARGAS", "marca": "Plantronics", "serial": "38HKFR"}, {"quien": "JUAN ESTEBAN DAVILA REINA", "marca": "Plantronics", "serial": "2NC493"}, {"quien": "MARIA ANGELICA GAVIRIA MARINEZ", "marca": "Plantronics", "serial": "1THMXT"}, {"quien": "YSDELY COROMOTO MARCADO", "marca": "Plantronics", "serial": "3021RF"}, {"quien": "CARLOS FELIPE OSSA VELEZ", "marca": "Plantronics", "serial": "33KV3U"}, {"quien": "JOHANA MARIA GRAJALES ZAPATA", "marca": "Plantronics", "serial": "38HKG2"}, {"quien": "VALERIA OSORIO CHIQUITO", "marca": "Plantronics", "serial": "35UHM5"}, {"quien": "LAURA CRISTINA SERNA VALENCIA", "marca": "Plantronics", "serial": "305BH6"}, {"quien": "DAYANA ANDREA MARIN", "marca": "Plantronics", "serial": "33WKD1"}, {"quien": "LINA LUCIA URREA PARRA", "marca": "Plantronics", "serial": "33WK71"}, {"quien": "FREDY ARISTIZABAL BENTACURT", "marca": "Plantronics", "serial": "36JMUA"}, {"quien": "SANTIAGO CARBALLO HENAO", "marca": "Plantronics", "serial": "38HLGJ"}, {"quien": "CRISTIAN DAVID MENDOZA", "marca": "Plantronics", "serial": "33KV2D"}, {"quien": "JUAN ESTEBAN GONZALEZ TELLEZ", "marca": "Plantronics", "serial": "38HKFY"}, {"quien": "WILMER ALEXANDER MERCHAN OCAMPO", "marca": "Plantronics", "serial": "2NC3FW"}, {"quien": "LICE JHOJANA ORREGO AMARILES", "marca": "Plantronics", "serial": "33WK78"}, {"quien": "LIBRE", "marca": "Plantronics", "serial": "35VWV4"}, {"quien": "LEIDY LAURA ARCILA CARDENAS", "marca": "Plantronics", "serial": "32FPXY"}, {"quien": "VALENTINA RUDA MORENO", "marca": "Plantronics", "serial": "389F6L"}, {"quien": "LIBRE", "marca": "Plantronics", "serial": "389G1D"}, {"quien": "ANDRÉS FELIPE LARGO MARTÍNEZ", "marca": "Jabra", "serial": "4338"}, {"quien": "LIBRE", "marca": "Plantronics", "serial": "346MVL"}, {"quien": "MARIA CAMILA CUESTAS LOPEZ", "marca": "Plantronics", "serial": "346PF6"}, {"quien": "YURANY MARITZA IJAJI BARRIOS", "marca": "Plantronics", "serial": "346PER"}, {"quien": "ESTA EN GARANTIA", "marca": "Plantronics", "serial": "346MV5"}, {"quien": "KATHERIN CELIS", "marca": "Plantronics", "serial": "33KV3T"}, {"quien": "DIEGO ALEJANDRO HINCAPIE ARAGON", "marca": "Plantronics", "serial": "36KNF7"}, {"quien": "ESTEBAN ANDICA", "marca": "Plantronics", "serial": "36KNKU"}, {"quien": "Juan Manuel Zamora Puentes", "marca": "Plantronics", "serial": "346PEX"}, {"quien": "LIBRE", "marca": "Jabra", "serial": "7315"}, {"quien": "LIBRE", "marca": "Plantronics", "serial": "38C97U"}, {"quien": "ADRIANA ARANGO BRITO", "marca": "Plantronics", "serial": "231D1"}, {"quien": "YESENIA ZAPATA SOTO", "marca": "Plantronics", "serial": "3F7KDF"}, {"quien": "1", "marca": "Jabra", "serial": "4502"}, {"quien": "LIBRE", "marca": "Plantronics", "serial": "32FR35"}, {"quien": "CAMILO ANDRES CAÑON LOPEZ", "marca": "Plantronics", "serial": "3F7K94"}, {"quien": "LUISA MEDINA", "marca": "Plantronics", "serial": "3F7K72"}, {"quien": null, "marca": "Plantronics", "serial": "3F7JMR"}, {"quien": "JUAN ESTEBAN RAMIREZ ARROYAVE", "marca": "Plantronics", "serial": "3F7JNA"}, {"quien": "SARA DAHIANNACARDONA GUEVARA", "marca": "Plantronics", "serial": "BW5U08"}, {"quien": "YULIANA ZULUAGA", "marca": "Plantronics", "serial": "35VWU9"}, {"quien": "JUAN HERNANDEZ VETANCUR", "marca": "Plantronics", "serial": "389F76"}, {"quien": "WILLIAM ANDRES NOREÑA JARAMILLO", "marca": "Jabra", "serial": "706"}, {"quien": "KAREN BONETTO", "marca": "Jabra", "serial": "9652"}, {"quien": "DABIEL BABILONIA HINESTROZA", "marca": "Plantronics", "serial": "35UJNW"}, {"quien": "PAOLA ANDREA VALOR DRADA", "marca": "Plantronics", "serial": "3649CD"}, {"quien": "MARIA FERNANDA PULGARIN", "marca": "Plantronics", "serial": "3JFEN9"}, {"quien": "SARA FERNANDA OSSA CARVAJAL", "marca": "Plantronics", "serial": "38HMVD"}, {"quien": "LIBRE", "marca": "Plantronics", "serial": "3648FV"}, {"quien": "YESICA PAOLA TREJOS MENDOZA", "marca": "Plantronics", "serial": "2NCPV0"}, {"quien": "LAURA XIMENA SERNA SANTA", "marca": "Plantronics", "serial": "33LNKC"}, {"quien": "LILIANA PATRICIA TARAZONA PADILLA", "marca": "Plantronics", "serial": "33LPAB"}, {"quien": "MARIANA CARMONA RESTREPO", "marca": "Plantronics", "serial": "33LPAF"}, {"quien": "LUIS CARLOS SANCHEZ CAMARGO", "marca": "Plantronics", "serial": "33LNKK"}, {"quien": "LIBRE", "marca": "Plantronics", "serial": "33LNL9"}, {"quien": "JEREMY HENAO GARCIA", "marca": "Plantronics", "serial": "33LNL7"}, {"quien": "ALEX MANZO", "marca": "Plantronics", "serial": "303745"}, {"quien": "ANGELES", "marca": "Plantronics", "serial": "346PF5"}, {"quien": "NICOLAS GIRALDO GUTIERREZ", "marca": "Plantronics", "serial": "33LPAC"}, {"quien": "CAMILA CALLE HURTADO", "marca": "Plantronics", "serial": "33LNL6"}, {"quien": "LIBRE (DIADEMA DOBLE )", "marca": "JABRA", "serial": "6242-6231"}, {"quien": null, "marca": "Plantronics", "serial": "2NCPDV"}, {"quien": "SANTIAGO( ASESOR COMERCIAL)", "marca": "Plantronics", "serial": "33LPAG"}, {"quien": "VALENTINA PINEDA", "marca": "Plantronics", "serial": "33LNL1"}, {"quien": "ANDRES VILLA CORREA", "marca": "Plantronics", "serial": "33LNL8"}, {"quien": "HERNEY DAVID GOMEZ DIAZ", "marca": "Plantronics", "serial": "33LNK7"}, {"quien": "MIGUEL ANGEL CERON", "marca": "Plantronics", "serial": "33LNKX"}, {"quien": "SANDRA VIVIANNE ARENAS MARTINEZ", "marca": "Plantronics", "serial": "8X214A6"}, {"quien": "JULIAN CAMILO SANCHEZ JACOME", "marca": "Plantronics", "serial": "2XKL6T"}, {"quien": "LIBRE PRESTADA A SANTIAGO CARBALLO", "marca": "Plantronics", "serial": "3F7LBK"}, {"quien": "LIBRE", "marca": "Plantronics", "serial": "3F8RCA"}, {"quien": "ESTEFANIA BARRIENTOS LOPEZ", "marca": "Plantronics", "serial": "3F8RBA"}, {"quien": "MARIANA CORRALES RESTREPO", "marca": "Plantronics", "serial": "3F8RA0"}, {"quien": "KAREN DAHIANA GONZÁLEZ SERNA", "marca": "Plantronics", "serial": "3F7LAT"}, {"quien": "KAREN YAJAIRA HERNANDEZ ROLON", "marca": "Plantronics", "serial": "3F7L6E"}, {"quien": "JACK LUCAS HERRERA OLIVAR", "marca": "Plantronics", "serial": "3F7K57"}, {"quien": "JHON JAIRO FREITE RIVAS", "marca": "Plantronics", "serial": "35JJFA"}, {"quien": "LIBRE", "marca": "Plantronics", "serial": "3F8R8V"}, {"quien": "NICOLAS SANTAMARIA BARBOSA", "marca": "Plantronics", "serial": "3F8R93"}, {"quien": "MARIA FERNANDA PULGARIN GOMEZ", "marca": "Plantronics", "serial": "3JFEPL"}, {"quien": "LIBRE", "marca": "Jabra", "serial": "3996"}, {"quien": "MARIA ALEXANDRA OSORIO TABORDA", "marca": "Plantronics", "serial": "2N9FL5"}, {"quien": "LIBRE", "marca": "Plantronics", "serial": "359TY7"}]}</script>
+<script>
+(function(){
+  "use strict";
+  var DATA = JSON.parse(document.getElementById('payload').textContent);
+  var BASE = DATA.equipos, BASE_PER = DATA.perifericos, BASE_DIA = DATA.diademas;
+  var PER = BASE_PER.slice(), DIA = BASE_DIA.slice();
+
+  /* BASE viene del Excel; EXTRA son los equipos registrados desde la pagina
+     y guardados en el almacen compartido. EQ es la union de los dos. */
+  var EXTRA = [], EXTRA_PER = [], EXTRA_DIA = [];
+  var EQ = BASE.slice();
+  var seen = {};
+  var puedeEscribir = null;   /* null = el servidor aun no ha respondido */
+  var dbRef = null;
+
+  function repetido(e){
+    return e.serial ? (seen[e.empresa + '\u0000' + e.serial] || 0) : 0;
+  }
+
+  /* ---------- diagnóstico ---------- */
+  function diagnosticar(){
+    EQ  = BASE.concat(EXTRA);
+    PER = BASE_PER.concat(EXTRA_PER);
+    DIA = BASE_DIA.concat(EXTRA_DIA);
+
+    /* Cada empresa lleva su propio inventario, asi que un serial solo cuenta
+       como repetido si aparece dos veces dentro de la MISMA empresa. */
+    seen = {};
+    EQ.forEach(function(e){
+      if(!e.serial) return;
+      var k = e.empresa + '\u0000' + e.serial;
+      seen[k] = (seen[k] || 0) + 1;
+    });
+
+    EQ.forEach(function(e, i){
+    e.i = i;
+    var problems = [];
+    if(!e.serial){
+      if(!e.okSinSerial){
+        problems.push({sev:'alert', t:'Sin serial', d:'No hay forma de identificar este equipo sin revisarlo físicamente.'});
+      }
+    } else if(!e.okSerial && /^(ABCDEF|XXXX|1234|TEST)/.test(e.serial)){
+      problems.push({sev:'alert', t:'Serial de relleno', d:'"'+e.serial+'" no es un serial real.'});
+    } else if(repetido(e) > 1 && !e.okDup){
+      problems.push({sev:'alert', t:'Serial repetido', d:'"'+e.serial+'" aparece en '+
+        repetido(e)+' equipos de '+e.empresa+'.'});
+    }
+    if(e.procRaw){
+      problems.push({sev:'alert', t:'Procesador inexistente', d:'Dice "'+e.procRaw+'". Intel no fabrica ese modelo.'});
+    }
+    if(e.placa && e.serial && e.placa.toUpperCase() === e.serial){
+      problems.push({sev:'warn', t:'Placa copiada del serial', d:'La placa debería ser el número de activo, no el serial.'});
+    }
+    var faltan = [];
+    if(!e.cpu) faltan.push('velocidad');
+    if(!e.ram) faltan.push('memoria');
+    if(!e.disco) faltan.push('disco');
+    if(!e.proc && !e.procRaw) faltan.push('procesador');
+    if(faltan.length){
+      problems.push({sev:'warn', t:'Faltan datos técnicos', d:'Sin '+faltan.join(', ')+'.'});
+    }
+    if(e.estado === 'ASIGNADO' && (!e.quien || /^(ASESOR|TRABAJADOR|LIBRE)\s*$/i.test(e.quien))){
+      problems.push({sev:'warn', t:'Asignado sin responsable', d:'Marcado como asignado pero no dice a quién.'});
+    }
+    e.problems = problems;
+    e.health = problems.some(function(p){return p.sev==='alert';}) ? 'alert'
+             : problems.length ? 'warn' : 'ok';
+    });
+  }
+
+  var EMPRESAS = ['Procytec','Servimercadeo','Moviaval','Movistar'];
+  /* Solo estas dos rotulan sus equipos con placa de activo */
+  var CON_PLACA = ['Procytec','Servimercadeo'];
+  var usaPlaca = function(emp){ return CON_PLACA.indexOf(emp) > -1; };
+
+  /* ---------- estado de la vista ---------- */
+  var st = { tab:'equipos', empresa:'Todas', q:'', estado:'', marca:'', tipo:'',
+             sort:'empresa', dir:1, focus:null, plain:false };
+
+  /* Preferencia de quien mira, guardada solo en su navegador */
+  try { st.plain = localStorage.getItem('inv.plain') === '1'; } catch(err){}
+
+  var $ = function(s){ return document.querySelector(s); };
+  var main = $('#main');
+
+  function esc(v){
+    return String(v).replace(/[&<>"]/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];
+    });
+  }
+  function cell(v, cls){
+    if(v === null || v === undefined || v === '') return '<span class="miss">—</span>';
+    return cls ? '<span class="'+cls+'">'+esc(v)+'</span>' : esc(v);
+  }
+
+  /* ---------- pestañas ---------- */
+  var TABS = [
+    {id:'equipos',  label:'Equipos',          n:function(){return EQ.length;}},
+    {id:'perif',    label:'Teclados y mouse', n:function(){return PER.length;}},
+    {id:'diademas', label:'Diademas',         n:function(){return DIA.length;}},
+    {id:'revisar',  label:'Por revisar',      n:function(){
+      return EQ.filter(function(e){return e.problems.length;}).length;}}
+  ];
+
+  function drawTabs(){
+    $('#tabs').innerHTML = TABS.filter(function(t){
+      return !(st.plain && t.id === 'revisar');
+    }).map(function(t){
+      return '<button class="tab" role="tab" data-tab="'+t.id+'" aria-selected="'+
+        (st.tab===t.id)+'">'+t.label+'<span class="n">'+t.n()+'</span></button>';
+    }).join('');
+  }
+
+  /* ---------- flota ---------- */
+  /* ---------- cifras, composición y flota ---------- */
+  function animar(el, hasta){
+    if(matchMedia('(prefers-reduced-motion:reduce)').matches){
+      el.textContent = hasta; return;
+    }
+    var t0 = null, dur = 640;
+    function paso(t){
+      if(t0 === null) t0 = t;
+      var p = Math.min(1, (t - t0) / dur);
+      el.textContent = Math.round(hasta * (1 - Math.pow(1 - p, 3)));
+      if(p < 1) requestAnimationFrame(paso);
+    }
+    requestAnimationFrame(paso);
+  }
+
+  function drawStats(){
+    var bad    = EQ.filter(function(e){ return e.health !== 'ok'; }).length;
+    var alerta = EQ.filter(function(e){ return e.health === 'alert'; }).length;
+
+    var tarjetas = st.plain
+      ? [['Equipos', EQ.length, ''], ['Teclados y mouse', PER.length, ''],
+         ['Diademas', DIA.length, ''], ['Empresas', EMPRESAS.length, '']]
+      : [['Equipos', EQ.length, ''], ['Registro completo', EQ.length - bad, 's-ok'],
+         ['Por revisar', bad - alerta, 's-warn'], ['Con error', alerta, 's-alert']];
+
+    $('#stats').innerHTML = tarjetas.map(function(t){
+      return '<div class="stat '+t[2]+'"><b data-n="'+t[1]+'">0</b><span>'+t[0]+'</span></div>';
+    }).join('');
+    [].forEach.call(document.querySelectorAll('.stat b'), function(el){
+      animar(el, +el.dataset.n);
+    });
+
+    var mix = EMPRESAS.map(function(x){
+      return [x, EQ.filter(function(e){ return e.empresa === x; }).length];
+    }).filter(function(x){ return x[1] > 0; });
+
+    $('#mix').innerHTML = mix.map(function(x){
+      return '<i data-emp="'+esc(x[0])+'" style="flex:'+x[1]+' 1 0"></i>';
+    }).join('');
+    $('#mixleg').innerHTML = mix.map(function(x){
+      return '<span data-emp="'+esc(x[0])+'"><i class="dot"></i>'+esc(x[0])+
+             ' <b>'+x[1]+'</b></span>';
+    }).join('');
+  }
+
+  function drawFleet(){
+    drawStats();
+    $('#fleet').innerHTML = EQ.map(function(e, k){
+      var name = e.serial || 'sin serial';
+      return '<button class="cell" role="listitem" data-emp="'+esc(e.empresa)+
+        '" data-h="'+(st.plain?'ok':e.health)+'" data-i="'+e.i+
+        '" style="animation-delay:'+Math.min(k*4,900)+'ms"'+
+        ' title="'+esc(e.empresa+' · '+name+(e.modelo?' · '+e.modelo:''))+
+        '" aria-label="'+esc(e.empresa+', '+name)+'"></button>';
+    }).join('');
+
+    var n = EQ.length;
+    var bad = EQ.filter(function(e){return e.health!=='ok';}).length;
+
+    if(st.plain){
+      $('#legend').innerHTML = '<span>Cada celda es un equipo, en el color de su '
+        + 'empresa. Haz clic para ver su ficha.</span>';
+      $('#foot-note').textContent = 'Inventario de '+n+
+        ' equipos en Procytec, Servimercadeo, Moviaval y Movistar.';
+    } else {
+      $('#legend').innerHTML =
+          '<span>El tono es la empresa. La marca inferior, el registro:</span>'
+        + '<span><i class="bar" style="background:var(--warn)"></i> faltan datos</span>'
+        + '<span><i class="bar" style="background:var(--alert)"></i> dato erróneo</span>';
+      $('#foot-note').textContent = 'De '+n+' equipos, '+(n-bad)+
+        ' tienen el registro completo y '+bad+' necesitan revisión.';
+    }
+    $('#stamp').textContent = n+' equipos · '+PER.length+' teclados y mouse · '+
+      DIA.length+' diademas';
+    $('#present').textContent = st.plain ? 'Mostrar diagnóstico' : 'Ocultar diagnóstico';
+  }
+
+  /* ---------- filtros ---------- */
+  function filtrar(){
+    var q = st.q.trim().toLowerCase();
+    return EQ.filter(function(e){
+      if(st.empresa !== 'Todas' && e.empresa !== st.empresa) return false;
+      if(st.estado && e.estado !== st.estado) return false;
+      if(st.marca && e.marca !== st.marca) return false;
+      if(st.tipo && e.tipo !== st.tipo) return false;
+      if(!q) return true;
+      return [e.serial,e.placa,e.modelo,e.marca,e.quien,e.area,e.cargo,e.tipo,e.empresa]
+        .some(function(v){ return v && String(v).toLowerCase().indexOf(q) > -1; });
+    }).sort(function(a,b){
+      var x = a[st.sort], y = b[st.sort];
+      if(x === null || x === undefined) return 1;
+      if(y === null || y === undefined) return -1;
+      if(typeof x === 'number') return (x-y)*st.dir;
+      return String(x).localeCompare(String(y),'es')*st.dir;
+    });
+  }
+
+  function uniq(key){
+    var out = [];
+    EQ.forEach(function(e){ if(e[key] && out.indexOf(e[key])<0) out.push(e[key]); });
+    return out.sort();
+  }
+
+  var COLS = [
+    {k:'empresa', t:'Empresa'},
+    {k:'serial',  t:'Serial',   mono:true},
+    {k:'placa',   t:'Placa',    mono:true},
+    {k:'tipo',    t:'Tipo'},
+    {k:'marca',   t:'Marca'},
+    {k:'modelo',  t:'Modelo'},
+    {k:'proc',    t:'Procesador'},
+    {k:'cpu',     t:'GHz',      num:true},
+    {k:'ram',     t:'RAM',      num:true},
+    {k:'disco',   t:'Disco',    num:true},
+    {k:'area',    t:'Área'},
+    {k:'cargo',   t:'Cargo'},
+    {k:'quien',   t:'Asignado a'},
+    {k:'estado',  t:'Estado'}
+  ];
+
+  function viewEquipos(){
+    var rows = filtrar();
+
+    /* La placa desaparece si ninguna empresa a la vista la maneja */
+    var mostrarPlaca = rows.some(function(e){ return usaPlaca(e.empresa); });
+    if(!mostrarPlaca && st.sort === 'placa'){ st.sort = 'empresa'; st.dir = 1; }
+    var cols = COLS.filter(function(c){ return c.k !== 'placa' || mostrarPlaca; });
+    var conAcciones = EXTRA.length > 0 && puedeEscribir !== false;
+    if(conAcciones) cols = cols.concat([{k:'__acc', t:''}]);
+
+    var h = '';
+
+    h += '<div class="controls">'
+      + '<input class="search" id="q" type="search" placeholder="Buscar serial, placa, modelo o persona" value="'+esc(st.q)+'">'
+      + sel('estado','Todos los estados', uniq('estado'))
+      + sel('marca','Todas las marcas', uniq('marca'))
+      + sel('tipo','Todos los tipos', uniq('tipo'))
+      + '</div>';
+
+    h += '<div class="chips">' + ['Todas'].concat(EMPRESAS).map(function(x){
+      var n = x==='Todas' ? EQ.length : EQ.filter(function(e){return e.empresa===x;}).length;
+      return '<button class="chip" data-emp="'+x+'" aria-pressed="'+(st.empresa===x)+'">'
+        + x + '<span class="n">' + n + '</span></button>';
+    }).join('')
+    + (puedeEscribir === false ? ''
+       : '<button class="chip add" id="nuevo" type="button">+ Registrar equipo</button>')
+    + '</div>';
+
+    if(!rows.length){
+      return h + '<div class="scroller"><div class="empty"><b>Ningún equipo coincide</b>'
+        + 'Prueba con menos filtros o busca por serial.</div></div>';
+    }
+
+    h += '<div class="scroller"><table><thead><tr>'
+      + cols.map(function(c){
+          var a = st.sort===c.k ? '<span class="arrow">'+(st.dir>0?'↑':'↓')+'</span>' : '';
+          return '<th class="sortable'+(c.num?' num':'')+'" data-sort="'+c.k+'">'+c.t+a+'</th>';
+        }).join('')
+      + '</tr></thead><tbody>'
+      + rows.map(function(e, k){
+          var cls = (!st.plain && e.health!=='ok') ? ' flag-'+e.health : '';
+          if(st.focus === e.i) cls += ' on';
+          return '<tr class="'+cls.trim()+'" id="row-'+e.i+'" data-ficha="'+e.i+
+            '" data-emp="'+esc(e.empresa)+
+            '" style="animation-delay:'+Math.min(k*14,420)+'ms">' + cols.map(function(c){
+            var v = e[c.k];
+            if(c.k==='__acc'){
+              return '<td>' + (e.docId
+                ? '<button class="del" data-del="'+esc(e.docId)+'" type="button" '
+                  + 'title="Quitar este registro" aria-label="Quitar">&times;</button>'
+                : '') + '</td>';
+            }
+            if(c.k==='empresa'){
+              return '<td>'+esc(v)+(e.docId?' <span class="tagnew">nuevo</span>':'')+'</td>';
+            }
+            if(c.k==='placa' && !usaPlaca(e.empresa)){
+              return '<td><span class="na">No aplica</span></td>';
+            }
+            if(c.k==='estado'){
+              var p = v==='ASIGNADO' ? 'ok' : v==='LIBRE' ? '' : 'warn';
+              return '<td>'+(v?'<span class="pill '+p+'">'+esc(v)+'</span>':cell(null))+'</td>';
+            }
+            if(c.k==='proc' && !v && e.procRaw){
+              return st.plain ? '<td>'+esc(e.procRaw)+'</td>'
+                              : '<td><span class="pill alert">'+esc(e.procRaw)+'</span></td>';
+            }
+            if(c.num){
+              var suf = c.k==='cpu' ? '' : ' GB';
+              return '<td class="num">'+(v!=null?esc(v)+suf:'<span class="miss">—</span>')+'</td>';
+            }
+            if(c.k==='quien') return '<td class="who">'+cell(v)+'</td>';
+            return '<td'+(c.mono?' class="mono"':'')+'>'+cell(v)+'</td>';
+          }).join('') + '</tr>';
+        }).join('')
+      + '</tbody></table></div>';
+
+    return h;
+  }
+
+  function sel(key, label, opts){
+    return '<select data-f="'+key+'"><option value="">'+label+'</option>'
+      + opts.map(function(o){
+          return '<option value="'+esc(o)+'"'+(st[key]===o?' selected':'')+'>'+esc(o)+'</option>';
+        }).join('') + '</select>';
+  }
+
+  function viewSimple(list, cols, ph, btn){
+    var q = st.q.trim().toLowerCase();
+    var rows = list.filter(function(r){
+      if(!q) return true;
+      return cols.some(function(c){
+        return r[c.k] && String(r[c.k]).toLowerCase().indexOf(q) > -1;
+      });
+    });
+    var h = '<div class="controls"><input class="search" id="q" type="search" placeholder="'
+      + ph + '" value="'+esc(st.q)+'"></div>';
+    if(btn && puedeEscribir !== false){
+      h += '<div class="chips"><button class="chip add" id="'+btn[0]+'" type="button">+ '
+        + btn[1] + '</button></div>';
+    }
+    if(!rows.length){
+      return h+'<div class="scroller"><div class="empty"><b>Sin resultados</b>Prueba otra búsqueda.</div></div>';
+    }
+    var hayNuevos = rows.some(function(r){ return r.docId; }) && puedeEscribir !== false;
+    var cs = hayNuevos ? cols.concat([{k:'__acc', t:''}]) : cols;
+    h += '<div class="scroller"><table><thead><tr>'
+      + cs.map(function(c){return '<th>'+c.t+'</th>';}).join('')
+      + '</tr></thead><tbody>'
+      + rows.map(function(r, k){
+          return '<tr style="animation-delay:'+Math.min(k*10,400)+'ms">'+cs.map(function(c){
+            if(c.k === '__acc'){
+              return '<td>' + (r.docId
+                ? '<button class="del" data-del="'+esc(r.docId)+'" data-col="'+esc(btn[2])+
+                  '" type="button" aria-label="Quitar">&times;</button>' : '') + '</td>';
+            }
+            var v = cell(r[c.k]);
+            if(c.primero && r.docId) v += ' <span class="tagnew">nuevo</span>';
+            return '<td'+(c.mono?' class="mono"':'')+'>'+v+'</td>';
+          }).join('')+'</tr>';
+        }).join('')
+      + '</tbody></table></div>';
+    return h;
+  }
+
+  function viewRevisar(){
+    var con = EQ.filter(function(e){ return e.problems.length; });
+    if(!con.length){
+      return '<div class="scroller"><div class="empty"><b>Nada pendiente</b>'
+        + 'Todos los registros están completos.</div></div>';
+    }
+    var byEmp = {};
+    con.forEach(function(e){ (byEmp[e.empresa] = byEmp[e.empresa] || []).push(e); });
+
+    var h = '<div class="controls"><input class="search" id="q" type="search" '
+      + 'placeholder="Buscar dentro de los pendientes" value="'+esc(st.q)+'"></div>';
+    var q = st.q.trim().toLowerCase();
+
+    EMPRESAS.forEach(function(emp){
+      var list = (byEmp[emp]||[]).filter(function(e){
+        if(!q) return true;
+        return [e.serial,e.modelo,e.quien].some(function(v){
+          return v && String(v).toLowerCase().indexOf(q)>-1; });
+      });
+      if(!list.length) return;
+      h += '<div class="group-head" data-emp="'+esc(emp)+'">'+esc(emp)+' · '+
+        list.length+' equipos</div>';
+      list.forEach(function(e){
+        e.problems.forEach(function(p){
+          h += '<div class="issue sev-'+p.sev+'">'
+            + '<h3>'+esc(p.t)+'</h3><p>'+esc(p.d)+'</p>'
+            + '<div class="meta"><span class="mono">'+esc(e.serial||'sin serial')+'</span>'
+            + (e.modelo?' · '+esc(e.modelo):'')
+            + (e.quien?' · '+esc(e.quien):'') + '</div></div>';
+        });
+      });
+    });
+    return h;
+  }
+
+  /* ---------- ficha de un equipo ---------- */
+  function par(t, v, ancho){
+    return '<div class="pair'+(ancho?' w':'')+'"><dt>'+t+'</dt><dd>'+cell(v)+'</dd></div>';
+  }
+
+  function abrirFicha(i){
+    var e = EQ[i];
+    if(!e) return;
+    cerrarFicha();
+
+    var diag = st.plain ? '' : (e.problems.length
+      ? '<div class="sec">Diagnóstico</div>' + e.problems.map(function(p){
+          return '<div class="diag sev-'+p.sev+'"><b>'+esc(p.t)+'</b><span>'+
+                 esc(p.d)+'</span></div>';
+        }).join('')
+      : '<div class="sec">Diagnóstico</div>'
+        + '<div class="clean">&#10003; Registro completo</div>');
+
+    var estadoPill = e.estado
+      ? '<span class="pill '+(e.estado==='ASIGNADO'?'ok':e.estado==='LIBRE'?'':'warn')+'">'
+        + esc(e.estado) + '</span>'
+      : '<span class="miss">&mdash;</span>';
+
+    var scrim = document.createElement('div');
+    scrim.className = 'sheet-scrim';
+    scrim.id = 'scrim';
+
+    var s = document.createElement('aside');
+    s.className = 'sheet';
+    s.id = 'sheet';
+    s.setAttribute('data-emp', e.empresa);
+    s.setAttribute('role', 'dialog');
+    s.setAttribute('aria-label', 'Ficha del equipo');
+    s.innerHTML =
+        '<div class="sheet-top">'
+      + '<button class="sheet-close" id="cerrarFicha" type="button" aria-label="Cerrar">&times;</button>'
+      + '<div class="emp">'+esc(e.empresa)+(e.docId?' &middot; nuevo':'')+'</div>'
+      + '<div class="sn">'+esc(e.serial || 'Sin serial')+'</div>'
+      + '<div class="md">'+esc(e.modelo || 'Modelo sin registrar')+'</div>'
+      + '</div>'
+      + '<div class="sheet-body">'
+      + '<div class="sec">Identificación</div>'
+      + '<div class="pairs">'
+      +   par('Placa', usaPlaca(e.empresa) ? e.placa : 'No aplica')
+      +   '<div class="pair"><dt>Estado</dt><dd>'+estadoPill+'</dd></div>'
+      +   par('Tipo', e.tipo)
+      +   par('Marca', e.marca)
+      + '</div>'
+      + '<div class="sec">Especificaciones</div>'
+      + '<div class="pairs">'
+      +   par('Procesador', e.proc || e.procRaw, true)
+      +   par('Velocidad', e.cpu ? e.cpu + ' GHz' : null)
+      +   par('Memoria', e.ram ? e.ram + ' GB' : null)
+      +   par('Disco', e.disco ? e.disco + ' GB' : null)
+      + '</div>'
+      + '<div class="sec">Asignación</div>'
+      + '<div class="pairs">'
+      +   par('Área', e.area)
+      +   par('Cargo', e.cargo)
+      +   par('Asignado a', e.quien, true)
+      + '</div>'
+      + diag
+      + (e.docId
+          ? '<div class="sheet-acts"><button class="btn ghost" data-del="'+esc(e.docId)+
+            '" type="button">Quitar del inventario</button></div>'
+          : '')
+      + '</div>';
+
+    document.body.appendChild(scrim);
+    document.body.appendChild(s);
+    var b = document.getElementById('cerrarFicha');
+    if(b) b.focus();
+  }
+
+  function cerrarFicha(){
+    var s = document.getElementById('sheet'), sc = document.getElementById('scrim');
+    if(s) s.remove();
+    if(sc) sc.remove();
+  }
+
+  /* Los dos proveedores numeran distinto: Plantronics usa 6 caracteres
+     alfanuméricos, Jabra 3 o 4 dígitos. Así un lote mezclado se separa solo. */
+  function marcaPorSerial(s){
+    var t = String(s || '').trim().toUpperCase();
+    if(!t) return null;
+    if(/^\d{3,4}$/.test(t) || /^\d{3,4}-\d{3,4}$/.test(t)) return 'Jabra';
+    if(/^[A-Z0-9]{5,7}$/.test(t) && /[A-Z]/.test(t))       return 'Plantronics';
+    return null;
+  }
+
+  /* Acepta un serial por línea, o "serial <tab> persona" pegado de una hoja */
+  function paresPegados(){
+    var ta = document.getElementById('d_sn');
+    if(!ta) return [];
+    var vistos = {}, out = [];
+    ta.value.split(/\r?\n/).forEach(function(linea){
+      var p = linea.split(/[\t;,]+/).map(function(x){ return x.trim(); })
+                   .filter(function(x){ return x; });
+      if(!p.length) return;
+      var sn = p[0].toUpperCase();
+      if(!sn || vistos[sn]) return;
+      vistos[sn] = 1;
+      out.push({serial: sn, quien: p.length > 1 ? p.slice(1).join(' ') : null});
+    });
+    return out;
+  }
+
+  /* ---------- periféricos y diademas ---------- */
+  /* Los identificadores van consecutivos ("Teclado 07"): se calcula el siguiente. */
+  function siguienteId(tipo){
+    var max = 0, ancho = 2;
+    PER.forEach(function(p){
+      if(p.tipo !== tipo || !p.id) return;
+      var m = String(p.id).match(/(\d+)\s*$/);
+      if(!m) return;
+      var n = +m[1];
+      if(n > max){ max = n; ancho = m[1].length; }
+    });
+    var sig = String(max + 1);
+    while(sig.length < ancho) sig = '0' + sig;
+    return tipo + ' ' + sig;
+  }
+
+  function marcasDe(lista, campo){
+    var out = [];
+    lista.forEach(function(x){
+      var v = x[campo];
+      if(v && out.indexOf(v) < 0) out.push(v);
+    });
+    return out.sort();
+  }
+
+  /* Todo el que ya aparece en el inventario, para no reescribir nombres */
+  function personas(){
+    var out = [];
+    EQ.forEach(function(e){
+      if(e.quien && !/^(ASESOR|TRABAJADOR|LIBRE)$/i.test(e.quien.trim()) &&
+         out.indexOf(e.quien) < 0) out.push(e.quien);
+    });
+    DIA.forEach(function(d){ if(d.quien && out.indexOf(d.quien) < 0) out.push(d.quien); });
+    return out.sort();
+  }
+
+  function listaOpts(id, ops){
+    return '<datalist id="'+id+'">'
+      + ops.map(function(o){ return '<option value="'+esc(o)+'"></option>'; }).join('')
+      + '</datalist>';
+  }
+
+  function abrirFormPerif(){
+    cerrarForm();
+    var marcas = marcasDe(PER, 'marca');
+    var ov = document.createElement('div');
+    ov.className = 'overlay'; ov.id = 'overlay';
+    ov.innerHTML =
+        '<div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt">'
+      + '<h2 id="mt">Registrar teclados y mouse</h2>'
+      + '<p class="hint">Los identificadores se asignan solos, siguiendo el consecutivo '
+      + 'que ya traen. Para un puesto nuevo, registra el juego completo de una vez.</p>'
+
+      + '<div class="auto">'
+      + '<div class="auto-h"><span>Qué vas a registrar</span></div>'
+      + '<div class="opts">'
+      + '<label class="opt"><input type="radio" name="qué" value="juego" checked>'
+      + '<b>Juego</b><span>teclado + mouse</span></label>'
+      + '<label class="opt"><input type="radio" name="qué" value="Teclado">'
+      + '<b>Solo teclado</b><span id="pvT"></span></label>'
+      + '<label class="opt"><input type="radio" name="qué" value="Mouse">'
+      + '<b>Solo mouse</b><span id="pvM"></span></label>'
+      + '</div>'
+      + '<div class="auto-a"><span class="auto-msg bien" id="prev"></span></div>'
+      + '</div>'
+
+      + '<div class="grid">'
+      + '<label class="fld"><span>Cantidad</span>'
+      + '<input id="p_n" type="number" min="1" max="40" value="1"></label>'
+      + '<label class="fld"><span>Marca del teclado</span>'
+      + '<input id="p_mt" list="lmt" autocomplete="off"></label>' + listaOpts('lmt', marcas)
+      + '<label class="fld"><span>Marca del mouse</span>'
+      + '<input id="p_mm" list="lmm" autocomplete="off"></label>' + listaOpts('lmm', marcas)
+      + '<label class="fld"><span>Estado</span><select id="p_es">'
+      + '<option>BUENO</option><option>REGULAR</option><option>DADO DE BAJA</option>'
+      + '</select></label>'
+      + '<label class="fld w2"><span>Para el equipo</span>'
+      + '<input id="p_eq" list="leq" autocomplete="off" '
+      + 'placeholder="Serial o placa del PC, si va con uno"></label>'
+      + listaOpts('leq', EQ.filter(function(e){ return e.serial; })
+          .map(function(e){ return e.placa ? e.placa + ' \u2014 ' + e.serial : e.serial; }))
+      + '<label class="fld w2"><span>Observación</span>'
+      + '<input id="p_ob" placeholder="Se completa sola al elegir el equipo"></label>'
+      + '</div>'
+      + '<p class="err" id="err" hidden></p>'
+      + '<div class="acts">'
+      + '<button class="btn ghost" id="cancelar" type="button">Cancelar</button>'
+      + '<button class="btn" id="guardarPerif" type="button">Guardar</button>'
+      + '</div></div>';
+    document.body.appendChild(ov);
+    refrescarPrevio();
+    ov.addEventListener('change', refrescarPrevio);
+    ov.addEventListener('input', refrescarPrevio);
+
+    /* al enlazar con un equipo, la observación se escribe sola en el formato
+       que ya usa la hoja: "(placa) Empresa" */
+    var eq = document.getElementById('p_eq');
+    if(eq) eq.addEventListener('change', function(){
+      var clave = eq.value.split('\u2014').pop().trim().toUpperCase();
+      var ref = EQ.filter(function(e){
+        return e.serial === clave || (e.placa && e.placa.toUpperCase() === clave);
+      })[0];
+      if(!ref) return;
+      var ob = document.getElementById('p_ob');
+      if(ob && !ob.value){
+        ob.value = '(' + (ref.placa || ref.serial) + ') ' + ref.empresa;
+      }
+      aviso('Enlazado a ' + (ref.modelo || ref.serial) + ' de ' + ref.empresa + '.');
+    });
+  }
+
+  function quePerif(){
+    var r = document.querySelector('input[name="qué"]:checked');
+    return r ? r.value : 'juego';
+  }
+
+  function refrescarPrevio(){
+    var pv = document.getElementById('prev');
+    if(!pv) return;
+    var t = document.getElementById('pvT'), m = document.getElementById('pvM');
+    if(t) t.textContent = 'desde ' + siguienteId('Teclado');
+    if(m) m.textContent = 'desde ' + siguienteId('Mouse');
+
+    var n = Math.max(1, Math.min(40, +(document.getElementById('p_n') || {}).value || 1));
+    var q = quePerif();
+    var partes = q === 'juego' ? ['Teclado','Mouse'] : [q];
+    pv.textContent = 'Se crearán ' + (n * partes.length) + ' registros: '
+      + partes.map(function(tp){
+          var base = siguienteId(tp);
+          return n === 1 ? base : base + ' … ' + tp + ' +' + (n - 1);
+        }).join(' y ');
+
+    var mt = document.getElementById('p_mt'), mm = document.getElementById('p_mm');
+    if(mt) mt.closest('.fld').style.display = (q === 'Mouse') ? 'none' : '';
+    if(mm) mm.closest('.fld').style.display = (q === 'Teclado') ? 'none' : '';
+  }
+
+  function guardarPerif(){
+    if(!dbRef) return mostrarErr('No se pudo conectar con el almacén. Recarga la página.');
+    var n = Math.max(1, Math.min(40, +document.getElementById('p_n').value || 1));
+    var q = quePerif();
+    var estado = document.getElementById('p_es').value;
+    var nota = document.getElementById('p_ob').value.trim() || null;
+    var marca = {
+      Teclado: (document.getElementById('p_mt').value || '').trim().toUpperCase() || null,
+      Mouse:   (document.getElementById('p_mm').value || '').trim().toUpperCase() || null
+    };
+    var tipos = q === 'juego' ? ['Teclado','Mouse'] : [q];
+
+    var filas = [];
+    tipos.forEach(function(tp){
+      var max = 0, ancho = 2;
+      PER.forEach(function(p){
+        if(p.tipo !== tp || !p.id) return;
+        var m = String(p.id).match(/(\d+)\s*$/);
+        if(m && +m[1] > max){ max = +m[1]; ancho = m[1].length; }
+      });
+      for(var i = 1; i <= n; i++){
+        var s = String(max + i);
+        while(s.length < ancho) s = '0' + s;
+        filas.push({id: tp + ' ' + s, tipo: tp, marca: marca[tp], nota: nota, estado: estado});
+      }
+    });
+    guardarLote('perifericos', filas);
+  }
+
+  function abrirFormDiadema(){
+    cerrarForm();
+    var ov = document.createElement('div');
+    ov.className = 'overlay'; ov.id = 'overlay';
+    ov.innerHTML =
+        '<div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt">'
+      + '<h2 id="mt">Registrar diademas</h2>'
+      + '<p class="hint">Escanea las etiquetas con la c&aacute;mara o pega los seriales. '
+      + 'La marca se deduce de cada serial, y puedes traer el responsable en la '
+      + 'misma l&iacute;nea separado por tabulaci&oacute;n.</p>'
+
+      + '<div class="auto">'
+      + '<div class="auto-h"><span>Seriales</span>'
+      + '<button class="mini" id="escanear" type="button">Escanear con c&aacute;mara</button></div>'
+      + '<textarea id="d_sn" rows="4" placeholder="35UHM3&#10;4338&#10;'
+      + '33LP9R&#9;LUZ ADRIANA GOMEZ MORALES"></textarea>'
+      + '<div class="auto-a"><span class="auto-msg bien" id="prev"></span></div>'
+      + '</div>'
+
+      + '<div class="grid">'
+      + '<label class="fld"><span>Marca</span><select id="d_ma">'
+      + '<option value="">Detectar por serial</option>'
+      + marcasDe(DIA, 'marca').map(function(m){return '<option>'+esc(m)+'</option>';}).join('')
+      + '</select></label>'
+      + '<label class="fld"><span>Asignar todas a</span>'
+      + '<input id="d_qn" list="lqn" autocomplete="off" '
+      + 'placeholder="Vac&iacute;o si van a bodega"></label>' + listaOpts('lqn', personas())
+      + '</div>'
+      + '<p class="err" id="err" hidden></p>'
+      + '<div class="acts">'
+      + '<button class="btn ghost" id="cancelar" type="button">Cancelar</button>'
+      + '<button class="btn" id="guardarDia" type="button">Guardar</button>'
+      + '</div></div>';
+    document.body.appendChild(ov);
+    var ta = document.getElementById('d_sn');
+    if(ta){ ta.focus(); ta.addEventListener('input', previoDiadema); }
+    var ma = document.getElementById('d_ma');
+    if(ma) ma.addEventListener('change', previoDiadema);
+    previoDiadema();
+  }
+
+  function previoDiadema(){
+    var pv = document.getElementById('prev');
+    if(!pv) return;
+    var pares = paresPegados();
+    if(!pares.length){
+      pv.textContent = 'Un serial por l\u00ednea.'; pv.className = 'auto-msg bien'; return;
+    }
+
+    var forzada = (document.getElementById('d_ma') || {}).value || '';
+    var nuevos = 0, repetidos = 0, sinMarca = 0, conPersona = 0, cuenta = {};
+    pares.forEach(function(p){
+      if(DIA.some(function(d){ return d.serial === p.serial; })){ repetidos++; return; }
+      var m = forzada || marcaPorSerial(p.serial);
+      if(m) cuenta[m] = (cuenta[m] || 0) + 1; else sinMarca++;
+      if(p.quien) conPersona++;
+      nuevos++;
+    });
+
+    var partes = [nuevos + (nuevos === 1 ? ' diadema' : ' diademas')];
+    var desglose = Object.keys(cuenta).map(function(m){ return cuenta[m] + ' ' + m; });
+    if(desglose.length) partes.push(desglose.join(', '));
+    if(conPersona) partes.push(conPersona + ' con responsable en la l\u00ednea');
+    if(repetidos)  partes.push(repetidos + ' ya existen, se omiten');
+    if(sinMarca)   partes.push(sinMarca + ' sin marca reconocida');
+
+    pv.textContent = partes.join(' \u00b7 ');
+    pv.className = 'auto-msg ' + ((repetidos || sinMarca) ? 'malo' : 'bien');
+  }
+
+  function guardarDia(){
+    if(!dbRef) return mostrarErr('No se pudo conectar con el almac\u00e9n. Recarga la p\u00e1gina.');
+    var forzada = (document.getElementById('d_ma') || {}).value || '';
+    var paraTodos = (document.getElementById('d_qn').value || '').trim() || null;
+
+    var filas = paresPegados()
+      .filter(function(p){ return !DIA.some(function(d){ return d.serial === p.serial; }); })
+      .map(function(p){
+        return {
+          serial: p.serial,
+          marca:  forzada || marcaPorSerial(p.serial),
+          quien:  p.quien || paraTodos
+        };
+      });
+
+    if(!filas.length) return mostrarErr('No hay seriales nuevos que registrar.');
+    if(filas.length > 60) return mostrarErr('M\u00e1ximo 60 por vez.');
+    guardarLote('diademas', filas);
+  }
+
+  /* ---------- lector de c\u00f3digo de barras ---------- */
+  var camara = null;
+
+  function escanear(){
+    if(typeof BarcodeDetector === 'undefined'){
+      return aviso('Este navegador no trae lector de c\u00f3digos. Usa Chrome o Edge, '
+                 + 'o escribe los seriales a mano.', true);
+    }
+    var box = document.createElement('div');
+    box.className = 'scan'; box.id = 'scan';
+    box.innerHTML = '<video id="cam" playsinline muted></video>'
+      + '<div class="mira"></div>'
+      + '<div class="scan-pie"><span id="scanmsg">Abriendo la c\u00e1mara\u2026</span>'
+      + '<button class="btn sm" id="cerrarScan" type="button">Terminar</button></div>';
+    document.body.appendChild(box);
+
+    var det = new BarcodeDetector({formats:
+      ['code_128','code_39','ean_13','qr_code','data_matrix','itf']});
+    var video = document.getElementById('cam');
+    var msg   = document.getElementById('scanmsg');
+    var leidos = {}, n = 0;
+
+    navigator.mediaDevices.getUserMedia({video: {facingMode: 'environment'}})
+      .then(function(stream){
+        camara = stream;
+        video.srcObject = stream;
+        return video.play();
+      })
+      .then(function(){
+        msg.textContent = 'Apunta a la etiqueta';
+        (function bucle(){
+          if(!camara) return;
+          det.detect(video).then(function(codes){
+            codes.forEach(function(c){
+              var s = String(c.rawValue || '').trim().toUpperCase();
+              if(!s || leidos[s]) return;
+              leidos[s] = 1; n++;
+              var ta = document.getElementById('d_sn');
+              if(ta){
+                ta.value = (ta.value.trim() ? ta.value.replace(/\s*$/, '') + '\n' : '') + s;
+                previoDiadema();
+              }
+              msg.textContent = n + ' le\u00eddos \u00b7 \u00faltimo ' + s;
+              if(navigator.vibrate) navigator.vibrate(40);
+            });
+          })['catch'](function(){})
+          .then(function(){ if(camara) setTimeout(bucle, 320); });
+        })();
+      })
+      ['catch'](function(){
+        cerrarScan();
+        aviso('No se pudo abrir la c\u00e1mara. Si la p\u00e1gina est\u00e1 incrustada, '
+            + '\u00e1brela en su propia pesta\u00f1a y reintenta.', true);
+      });
+  }
+
+  function cerrarScan(){
+    if(camara){
+      camara.getTracks().forEach(function(t){ t.stop(); });
+      camara = null;
+    }
+    var b = document.getElementById('scan');
+    if(b) b.remove();
+  }
+
+  /* Escritura por lote: secuencial, para no pisar el límite de escrituras */
+  function guardarLote(coleccion, filas){
+    if(!filas.length) return mostrarErr('No hay nada que registrar.');
+    var btn = document.querySelector('.acts .btn:not(.ghost)');
+    if(btn){ btn.disabled = true; btn.textContent = 'Guardando 1/' + filas.length; }
+
+    var i = 0;
+    function siguiente(){
+      if(i >= filas.length){ cerrarForm(); return; }
+      if(btn) btn.textContent = 'Guardando ' + (i + 1) + '/' + filas.length;
+      dbRef.collection(coleccion).add(filas[i]).then(function(){
+        i++; siguiente();
+      })['catch'](function(err){
+        if(btn){ btn.disabled = false; btn.textContent = 'Guardar'; }
+        mostrarErr(err && err.code === 'invalid_argument'
+          ? 'No tienes permiso para registrar en esta página.'
+          : 'Se guardaron ' + i + ' de ' + filas.length + '. Reintenta el resto.');
+      });
+    }
+    siguiente();
+  }
+
+  /* ---------- registrar un equipo nuevo ---------- */
+  function valoresDe(k){
+    var out = [];
+    EQ.forEach(function(e){ if(e[k] && out.indexOf(e[k]) < 0) out.push(e[k]); });
+    return out.sort();
+  }
+
+  /* La placa de Procytec es consecutiva numerica: se propone la siguiente libre. */
+  function placaSugerida(emp){
+    var nums = EQ.filter(function(e){ return e.empresa === emp && e.placa; })
+                 .map(function(e){ return /^\d+$/.test(e.placa) ? +e.placa : null; })
+                 .filter(function(n){ return n !== null; });
+    if(nums.length < 3) return '';
+    return String(Math.max.apply(null, nums) + 1);
+  }
+
+  var CAMPOS = [
+    {k:'empresa', t:'Empresa',      tipo:'select', req:true, op:EMPRESAS},
+    {k:'estado',  t:'Estado',       tipo:'select', req:true,
+     op:['ASIGNADO','LIBRE','EN REVISION','EN REPARACION','DADO DE BAJA']},
+    {k:'serial',  t:'Serial',       tipo:'text',   mayus:true},
+    {k:'placa',   t:'Placa',        tipo:'text'},
+    {k:'tipo',    t:'Tipo',         tipo:'lista',  dyn:'tipo'},
+    {k:'marca',   t:'Marca',        tipo:'lista',  dyn:'marca'},
+    {k:'modelo',  t:'Modelo',       tipo:'lista',  dyn:'modelo'},
+    {k:'proc',    t:'Procesador',   tipo:'lista',  dyn:'proc'},
+    {k:'cpu',     t:'Velocidad (GHz)', tipo:'number', paso:'0.01'},
+    {k:'ram',     t:'RAM (GB)',     tipo:'number', paso:'1'},
+    {k:'disco',   t:'Disco (GB)',   tipo:'number', paso:'1'},
+    {k:'area',    t:'Área',         tipo:'lista',  dyn:'area', mayus:true},
+    {k:'cargo',   t:'Cargo',        tipo:'lista',  dyn:'cargo'},
+    {k:'quien',   t:'Asignado a',   tipo:'lista',  dyn:'quien'}
+  ];
+
+  /* ---------- leer los datos que reporta el propio equipo ---------- */
+  var COMANDO = '$c=Get-CimInstance Win32_ComputerSystem;$b=Get-CimInstance Win32_BIOS;' +
+    '$p=Get-CimInstance Win32_Processor|select -First 1;[pscustomobject]@{' +
+    'MARCA=$c.Manufacturer;MODELO=$c.Model;SERIAL=$b.SerialNumber;PROCESADOR=$p.Name;' +
+    'CPU_GHZ=[math]::Round($p.MaxClockSpeed/1000,2);' +
+    'RAM_GB=[math]::Round($c.TotalPhysicalMemory/1GB);' +
+    'DISCO_GB=[math]::Round((Get-CimInstance Win32_DiskDrive|sort Size -desc|' +
+    'select -First 1).Size/1GB);ASIGNADO_A=$c.UserName}|ConvertTo-Json';
+
+  var LLAVES = {
+    serial:['serial','serialnumber','numerodeserie','númerodeserie','servicetag',
+            'etiquetadeservicio','nrodeserie'],
+    marca: ['marca','manufacturer','fabricante','fabricantedelsistema'],
+    modelo:['modelo','model','systemmodel','modelodelsistema'],
+    proc:  ['procesador','processor','cpu_name','nombredelprocesador','name'],
+    cpu:   ['cpu_ghz','cpughz','maxclockspeed','velocidad'],
+    ram:   ['ram_gb','ramgb','totalphysicalmemory','memoriafisicatotal',
+            'memoriafísicatotal','memoriatotal'],
+    disco: ['disco_gb','discogb','size','tamaño','tamano','capacidad'],
+    quien: ['asignado_a','asignadoa','username','usuario','nombredeusuario']
+  };
+
+  function familiaProc(t){
+    var u = String(t).toUpperCase();
+    var m = u.match(/ULTRA\s*(\d)/);
+    if(m) return 'Intel Core Ultra ' + m[1];
+    m = u.match(/RYZEN\s*(\d)/);
+    if(m) return 'AMD Ryzen ' + m[1];
+    m = u.match(/\bI([3579])\b|CORE\(TM\)\s*I([3579])|CORE\s*I([3579])/);
+    if(m) return 'Intel Core i' + (m[1] || m[2] || m[3]);
+    return null;
+  }
+
+  function normalizaLeido(k, v){
+    if(v === null || v === undefined || v === '') return null;
+    var s = String(v).trim();
+    if(!s) return null;
+    if(k === 'cpu'){
+      var n = parseFloat(s.replace(',', '.'));
+      if(isNaN(n)) return null;
+      return n > 100 ? Math.round(n / 1000 * 100) / 100 : Math.round(n * 100) / 100;
+    }
+    if(k === 'ram' || k === 'disco'){
+      var u = s.toUpperCase();
+      var d = parseFloat(String(s).replace(/[^\d.]/g, ''));
+      if(isNaN(d)) return null;
+      if(/\bTB\b/.test(u))            return Math.round(d * 1024);
+      if(/\bMB\b/.test(u) && d > 999) return Math.round(d / 1024);
+      if(d > 100000)                   return Math.round(d / 1073741824);
+      return Math.round(d);
+    }
+    if(k === 'proc')   return familiaProc(s) || null;
+    if(k === 'serial') return s.toUpperCase();
+    if(k === 'marca')  return s.toUpperCase().split(/\s+/)[0];
+    if(k === 'quien')  return s.indexOf('\\') > -1 ? s.split('\\').pop() : s;
+    return s;
+  }
+
+  function interpretar(txt){
+    var crudo = {};
+    var t = String(txt || '').trim();
+    if(!t) return null;
+
+    /* 1) el JSON que devuelve el comando o el script de inventario */
+    try {
+      var j = JSON.parse(t);
+      if(j && typeof j === 'object' && !Array.isArray(j)) crudo = j;
+    } catch(err){ /* 2) lineas "clave : valor" de systeminfo o Format-List */ }
+
+    if(!Object.keys(crudo).length){
+      t.split(/\r?\n/).forEach(function(linea){
+        var p = linea.indexOf(':');
+        if(p < 1) return;
+        crudo[linea.slice(0, p)] = linea.slice(p + 1);
+      });
+    }
+
+    var limpio = {};
+    Object.keys(crudo).forEach(function(k){
+      limpio[k.toLowerCase().replace(/[\s_.\-]/g, '')] = crudo[k];
+    });
+
+    var out = {}, hubo = false;
+    Object.keys(LLAVES).forEach(function(destino){
+      for(var i = 0; i < LLAVES[destino].length; i++){
+        var alias = LLAVES[destino][i].replace(/[\s_.\-]/g, '');
+        if(limpio[alias] !== undefined){
+          var v = normalizaLeido(destino, limpio[alias]);
+          if(v !== null && v !== ''){ out[destino] = v; hubo = true; }
+          break;
+        }
+      }
+    });
+    return hubo ? out : null;
+  }
+
+  function abrirForm(){
+    var campos = CAMPOS.map(function(c){
+      var id = 'f_' + c.k, ctrl;
+      if(c.tipo === 'select'){
+        ctrl = '<select id="'+id+'" data-k="'+c.k+'"><option value=""></option>'
+          + c.op.map(function(o){return '<option>'+esc(o)+'</option>';}).join('') + '</select>';
+      } else if(c.tipo === 'lista'){
+        var ops = valoresDe(c.dyn);
+        ctrl = '<input id="'+id+'" data-k="'+c.k+'" list="l_'+c.k+'" autocomplete="off">'
+          + '<datalist id="l_'+c.k+'">'
+          + ops.map(function(o){return '<option value="'+esc(o)+'"></option>';}).join('')
+          + '</datalist>';
+      } else {
+        ctrl = '<input id="'+id+'" data-k="'+c.k+'" type="'+
+          (c.tipo==='number' ? 'number" step="'+c.paso : 'text') + '">';
+      }
+      return '<label class="fld"><span>'+c.t+(c.req?' *':'')+'</span>'+ctrl+'</label>';
+    }).join('');
+
+    var ov = document.createElement('div');
+    ov.className = 'overlay';
+    ov.id = 'overlay';
+    ov.innerHTML =
+        '<div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt">'
+      + '<h2 id="mt">Registrar un equipo</h2>'
+      + '<p class="hint">Pega lo que el equipo reporta de sí mismo y se llena solo. '
+      + 'Lo que escribas a mano es apenas la asignación.</p>'
+
+      + '<div class="auto">'
+      + '<div class="auto-h"><span>1 &middot; Datos del equipo</span>'
+      + '<button class="mini" id="vercmd" type="button">Ver comando</button></div>'
+      + '<pre class="cmd" id="cmd" hidden><code>'+esc(COMANDO)+'</code>'
+      + '<button class="mini copy" id="copiarcmd" type="button">Copiar</button></pre>'
+      + '<textarea id="pegado" rows="3" placeholder="Pega aquí la salida del comando, '
+      + 'o de systeminfo, o el JSON del script de inventario"></textarea>'
+      + '<div class="auto-a">'
+      + '<button class="btn sm" id="leer" type="button">Leer y completar</button>'
+      + '<span class="auto-msg" id="automsg"></span></div>'
+      + '</div>'
+
+      + '<div class="auto-h plain"><span>2 &middot; Asignación</span></div>'
+      + '<div class="grid">'+campos+'</div>'
+      + '<p class="err" id="err" hidden></p>'
+      + '<div class="acts">'
+      + '<button class="btn ghost" id="cancelar" type="button">Cancelar</button>'
+      + '<button class="btn" id="guardar" type="button">Guardar</button>'
+      + '</div></div>';
+    document.body.appendChild(ov);
+
+    var pg = document.getElementById('pegado');
+    if(pg) pg.focus();
+
+    /* al elegir empresa: proponer la siguiente placa libre */
+    var emp = document.getElementById('f_empresa');
+    if(emp) emp.addEventListener('change', function(){
+      var pl = document.getElementById('f_placa');
+      if(pl && !pl.value) pl.value = placaSugerida(emp.value);
+    });
+
+    /* al elegir un modelo ya conocido: copiar sus caracteristicas */
+    var mod = document.getElementById('f_modelo');
+    if(mod) mod.addEventListener('change', function(){
+      var ref = EQ.filter(function(e){ return e.modelo === mod.value; })[0];
+      if(!ref) return;
+      var copiados = 0;
+      ['tipo','marca','proc','cpu','ram','disco'].forEach(function(k){
+        var el = document.getElementById('f_' + k);
+        if(el && !el.value && ref[k] !== null && ref[k] !== undefined){
+          el.value = ref[k]; copiados++;
+        }
+      });
+      if(copiados) aviso(copiados + ' campos tomados de otro ' + mod.value + '.');
+    });
+
+    /* si se nombra un responsable, el equipo esta asignado */
+    var q = document.getElementById('f_quien');
+    if(q) q.addEventListener('change', function(){
+      var es = document.getElementById('f_estado');
+      if(es && !es.value && q.value.trim()) es.value = 'ASIGNADO';
+    });
+  }
+
+  function aviso(msg, malo){
+    var el = document.getElementById('automsg');
+    if(!el) return;
+    el.textContent = msg;
+    el.className = 'auto-msg' + (malo ? ' malo' : ' bien');
+  }
+
+  function leerPegado(){
+    var ta = document.getElementById('pegado');
+    if(!ta) return;
+    var datos = interpretar(ta.value);
+    if(!datos){
+      return aviso('No reconocí ningún dato ahí. Revisa que sea la salida completa.', true);
+    }
+    var n = 0;
+    Object.keys(datos).forEach(function(k){
+      var el = document.getElementById('f_' + k);
+      if(el){ el.value = datos[k]; n++; }
+    });
+    var es = document.getElementById('f_estado');
+    if(es && !es.value) es.value = datos.quien ? 'ASIGNADO' : 'LIBRE';
+    aviso(n + ' campos completados. Revisa y añade empresa, área y cargo.');
+  }
+
+  function cerrarForm(){
+    cerrarScan();
+    var ov = document.getElementById('overlay');
+    if(ov) ov.remove();
+  }
+
+  function leerForm(){
+    var r = {};
+    CAMPOS.forEach(function(c){
+      var el = document.getElementById('f_'+c.k);
+      if(!el) return;
+      var v = (el.value || '').trim();
+      if(!v){ r[c.k] = null; return; }
+      if(c.tipo === 'number'){
+        var n = parseFloat(v.replace(',', '.'));
+        r[c.k] = isNaN(n) ? null : n;
+      } else {
+        r[c.k] = c.mayus ? v.toUpperCase() : v;
+      }
+    });
+    r.procRaw = null;
+    return r;
+  }
+
+  function mostrarErr(msg){
+    var el = document.getElementById('err');
+    if(!el) return;
+    el.textContent = msg;
+    el.hidden = false;
+  }
+
+  function guardar(){
+    var r = leerForm();
+    if(!r.empresa || !r.estado){
+      return mostrarErr('Empresa y estado son obligatorios.');
+    }
+    if(!r.serial && !r.modelo){
+      return mostrarErr('Indica al menos el serial o el modelo.');
+    }
+    if(r.serial && EQ.some(function(e){
+      return e.empresa === r.empresa && e.serial === r.serial;
+    })){
+      return mostrarErr('Ese serial ya existe en '+r.empresa+'.');
+    }
+    if(!dbRef){
+      return mostrarErr('No se pudo conectar con el almacén. Recarga la página.');
+    }
+
+    var btn = document.getElementById('guardar');
+    if(btn){ btn.disabled = true; btn.textContent = 'Guardando...'; }
+
+    dbRef.collection('equipos').add(r).then(function(){
+      cerrarForm();
+    })['catch'](function(err){
+      if(btn){ btn.disabled = false; btn.textContent = 'Guardar'; }
+      mostrarErr(err && err.code === 'invalid_argument'
+        ? 'No tienes permiso para registrar equipos en esta página.'
+        : 'No se pudo guardar. Intenta de nuevo.');
+    });
+  }
+
+  function quitar(docId, coleccion){
+    if(!dbRef) return;
+    dbRef.collection(coleccion || 'equipos').doc(docId)['delete']()['catch'](function(){});
+  }
+
+  /* ---------- almacén compartido ---------- */
+  function conectar(){
+    /* Fuera de claude.ai no existe el almacén compartido: la página funciona
+       igual para consultar, pero sin registro, porque no habría dónde guardar. */
+    if(!window.claude || !window.claude.use){
+      puedeEscribir = false;
+      render();
+      return;
+    }
+
+    window.claude.use('user').then(function(u){
+      if(!u) return;
+      return u.can('data.write').then(function(v){
+        puedeEscribir = v;      /* null = sin respuesta: se deja el boton */
+        render();
+      });
+    })['catch'](function(){});
+
+    window.claude.use('db').then(function(db){
+      if(!db) return;           /* sin almacen: la pagina sigue siendo de lectura */
+      dbRef = db;
+      function docs(snap){
+        return snap.docs.map(function(d){
+          var o = {}, src = d.data() || {};
+          Object.keys(src).forEach(function(k){ o[k] = src[k]; });
+          o.docId = d.id;
+          return o;
+        });
+      }
+      function refrescar(){ diagnosticar(); drawFleet(); render(); }
+      var caida = function(){ /* suscripcion caida: se queda con lo ya cargado */ };
+
+      db.collection('equipos').onSnapshot(function(s){
+        EXTRA = docs(s); refrescar();
+      }, caida);
+      db.collection('perifericos').onSnapshot(function(s){
+        EXTRA_PER = docs(s); refrescar();
+      }, caida);
+      db.collection('diademas').onSnapshot(function(s){
+        EXTRA_DIA = docs(s); refrescar();
+      }, caida);
+    })['catch'](function(){});
+  }
+
+  /* ---------- render ---------- */
+  function render(){
+    drawTabs();
+    if(st.tab==='equipos')       main.innerHTML = viewEquipos();
+    else if(st.tab==='perif')    main.innerHTML = viewSimple(PER,
+      [{k:'id',t:'Identificador',mono:true,primero:true},{k:'tipo',t:'Tipo'},
+       {k:'marca',t:'Marca'},{k:'nota',t:'Observación'},{k:'estado',t:'Estado'}],
+      'Buscar identificador o marca',
+      ['nuevoPerif','Registrar teclado o mouse','perifericos']);
+    else if(st.tab==='diademas') main.innerHTML = viewSimple(DIA,
+      [{k:'quien',t:'Asignada a',primero:true},{k:'marca',t:'Marca'},
+       {k:'serial',t:'Serial',mono:true}],
+      'Buscar persona, marca o serial',
+      ['nuevoDia','Registrar diademas','diademas']);
+    else                         main.innerHTML = viewRevisar();
+
+    var q = document.getElementById('q');
+    if(q && st.q){ q.focus(); q.setSelectionRange(q.value.length, q.value.length); }
+  }
+
+  /* ---------- eventos ---------- */
+  document.addEventListener('click', function(ev){
+    var t = ev.target.closest('[data-tab]');
+    if(t){ st.tab = t.dataset.tab; st.q=''; st.focus=null; render(); return; }
+
+    var c = ev.target.closest('[data-emp]');
+    if(c){ st.empresa = c.dataset.emp; render(); return; }
+
+    var s = ev.target.closest('[data-sort]');
+    if(s){
+      if(st.sort === s.dataset.sort) st.dir = -st.dir;
+      else { st.sort = s.dataset.sort; st.dir = 1; }
+      render(); return;
+    }
+
+    var f = ev.target.closest('.cell');
+    if(f){ abrirFicha(+f.dataset.i); return; }
+
+    if(ev.target.id === 'nuevo'){ abrirForm(); return; }
+    if(ev.target.id === 'leer'){ leerPegado(); return; }
+    if(ev.target.id === 'nuevoPerif'){ abrirFormPerif(); return; }
+    if(ev.target.id === 'nuevoDia'){ abrirFormDiadema(); return; }
+    if(ev.target.id === 'guardarPerif'){ guardarPerif(); return; }
+    if(ev.target.id === 'guardarDia'){ guardarDia(); return; }
+    if(ev.target.id === 'escanear'){ escanear(); return; }
+    if(ev.target.id === 'cerrarScan'){ cerrarScan(); return; }
+    if(ev.target.id === 'vercmd'){
+      var c = document.getElementById('cmd');
+      if(c){ c.hidden = !c.hidden; ev.target.textContent = c.hidden ? 'Ver comando' : 'Ocultar'; }
+      return;
+    }
+    if(ev.target.id === 'copiarcmd'){
+      var b = ev.target;
+      try {
+        navigator.clipboard.writeText(COMANDO).then(function(){
+          b.textContent = 'Copiado';
+          setTimeout(function(){ b.textContent = 'Copiar'; }, 1600);
+        })['catch'](function(){ b.textContent = 'Selecciona y copia'; });
+      } catch(err){ b.textContent = 'Selecciona y copia'; }
+      return;
+    }
+    if(ev.target.id === 'cancelar' || ev.target.id === 'overlay'){ cerrarForm(); return; }
+    if(ev.target.id === 'guardar'){ guardar(); return; }
+
+    var del = ev.target.closest('[data-del]');
+    if(del){
+      if(confirm('¿Quitar este registro del inventario?')){
+        cerrarFicha(); quitar(del.dataset.del, del.dataset.col);
+      }
+      return;
+    }
+
+    if(ev.target.id === 'cerrarFicha' || ev.target.id === 'scrim'){ cerrarFicha(); return; }
+
+    var fila = ev.target.closest('[data-ficha]');
+    if(fila){ abrirFicha(+fila.dataset.ficha); return; }
+
+    if(ev.target.id === 'present'){
+      st.plain = !st.plain;
+      try { localStorage.setItem('inv.plain', st.plain ? '1' : '0'); } catch(err){}
+      if(st.plain && st.tab === 'revisar') st.tab = 'equipos';
+      drawFleet(); render(); return;
+    }
+
+    if(ev.target.id === 'theme'){
+      var cur = document.documentElement.getAttribute('data-theme');
+      var dark = cur ? cur==='dark'
+        : matchMedia('(prefers-color-scheme:dark)').matches;
+      document.documentElement.setAttribute('data-theme', dark ? 'light' : 'dark');
+    }
+  });
+
+  document.addEventListener('input', function(ev){
+    if(ev.target.id === 'q'){ st.q = ev.target.value; st.focus = null; render(); }
+  });
+
+  document.addEventListener('change', function(ev){
+    var f = ev.target.dataset && ev.target.dataset.f;
+    if(f){ st[f] = ev.target.value; render(); }
+  });
+
+  document.addEventListener('keydown', function(ev){
+    if(ev.key === 'Escape'){
+      if(document.getElementById('scan')) cerrarScan();
+      else { cerrarForm(); cerrarFicha(); }
+    }
+  });
+
+  diagnosticar();
+  drawFleet();
+  render();
+  conectar();
+})();
+</script>
+</body>
+</html>
